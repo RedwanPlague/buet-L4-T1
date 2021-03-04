@@ -1,8 +1,11 @@
 from BitVector import BitVector
 from time import time
 
+MAKE = True
+
 """ Used Constants """
 AES_MODULUS = BitVector(bitstring='100011011')
+TWO = BitVector(intVal=2, size=8)
 KEY_LEN = 128
 BYTES = KEY_LEN // 8
 ROW = 4
@@ -10,7 +13,7 @@ COL = BYTES // ROW
 ROUNDS = 10 + (KEY_LEN - 128) // 32
 
 """ Used Constant Tables """
-SBox = (
+SBox = [
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
     0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
@@ -27,9 +30,9 @@ SBox = (
     0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E, 0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
     0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16,
-)
+]
 
-InvSBox = (
+InvSBox = [
     0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
     0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
     0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E,
@@ -46,21 +49,53 @@ InvSBox = (
     0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D, 0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF,
     0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D,
-)
+]
+
+
+def inverse(bv):
+    return BitVector(intVal=0, size=8) if int(bv) == 0 else bv.gf_MI(AES_MODULUS, 8)
+
+
+def build_s_box():
+    offset = BitVector(intVal=0x63, size=8)
+    # SBox = [0 for _ in range(0x100)]
+    for i in range(0, 0x100):
+        b = inverse(BitVector(intVal=i, size=8))
+        s = offset ^ b ^ (b << 1) ^ (b << 1) ^ (b << 1) ^ (b << 1)
+        SBox[i] = int(s)
+    # for i in range(0, 0x100):
+    #     print(hex(SBox[i]), end=' ')
+    #     if i % 0x10 == 0xF:
+    #         print()
+
+
+def build_inv_s_box():
+    offset = BitVector(intVal=0x5, size=8)
+    # InvSBox = [0 for _ in range(0x100)]
+    for i in range(0, 0x100):
+        s = BitVector(intVal=i, size=8)
+        b = offset ^ (s << 1) ^ (s << 2) ^ (s << 3)
+        InvSBox[i] = int(inverse(b))
+    # for i in range(0, 0x100):
+    #     print(hex(InvSBox[i]), end=' ')
+    #     if i % 0x10 == 0xF:
+    #         print()
 
 
 multiplication_table = [[
     BitVector(intVal=j, size=8).gf_multiply_modular(BitVector(intVal=i, size=8), AES_MODULUS, 8)
     for i in range(0x100)] for j in range(0x10)
 ]
+left = [[(j + i) % COL for j in range(COL)] for i in range(ROW)]
+right = [[(j - i + COL) % COL for j in range(COL)] for i in range(ROW)]
 
 
-def multiply(bv2, bv1=None):
-    return multiplication_table[bv1.int_val() if bv1 is not None else 2][bv2.int_val()]
+def multiply(bv1, bv2):
+    return multiplication_table[int(bv1)][int(bv2)]
 
 
 def substitute(bv, substitute_list):
-    return BitVector(intVal=substitute_list[bv.int_val()], size=8)
+    return BitVector(intVal=substitute_list[int(bv)], size=8)
 
 
 class GaloisAESMatrix:
@@ -101,7 +136,7 @@ class GaloisAESMatrix:
         for i in range(new_n):
             for j in range(new_m):
                 for k in range(mid):
-                    result[i][j] ^= multiply(bv1=self.ar[i][k], bv2=other.ar[k][j])
+                    result[i][j] ^= multiply(self.ar[i][k], other.ar[k][j])
         return GaloisAESMatrix(list_2d=result)
 
     def substitute_all(self, substitute_list):
@@ -109,12 +144,9 @@ class GaloisAESMatrix:
             list_2d=[[substitute(bv, substitute_list) for bv in row] for row in self.ar]
         )
 
-    def cylindrical_shift(self, left=True):
+    def cylindrical_shift(self, index):
         return GaloisAESMatrix(
-            list_2d=[
-                [self.ar[i][(j + (i if left else - i + self.m)) % self.m] for j in range(self.m)]
-                for i in range(self.n)
-            ]
+            list_2d=[[self.ar[i][index[i][j]] for j in range(self.m)] for i in range(self.n)]
         )
 
     def next_round(self, current_round_const, substitute_list):
@@ -131,7 +163,7 @@ class GaloisAESMatrix:
                 result[i][j] = result[i][j - 1] ^ self.ar[i][j]
 
         next_round_const = current_round_const.copy()
-        next_round_const[0] = multiply(bv2=next_round_const[0])
+        next_round_const[0] = multiply(TWO, next_round_const[0])
 
         return GaloisAESMatrix(list_2d=result), next_round_const
 
@@ -177,12 +209,12 @@ def encrypt_block(data, round_keys):
 
     for i in range(1, ROUNDS):
         matrix = matrix.substitute_all(SBox)
-        matrix = matrix.cylindrical_shift()
+        matrix = matrix.cylindrical_shift(left)
         matrix = Mixer @ matrix
         matrix = matrix ^ round_keys[i]
 
     matrix = matrix.substitute_all(SBox)
-    matrix = matrix.cylindrical_shift()
+    matrix = matrix.cylindrical_shift(left)
     matrix = matrix ^ round_keys[-1]
 
     return matrix.as_line('')
@@ -194,12 +226,12 @@ def decrypt_block(cipher, round_keys):
     matrix = matrix ^ round_keys[-1]
 
     for i in range(ROUNDS - 1, 0, -1):
-        matrix = matrix.cylindrical_shift(False)
+        matrix = matrix.cylindrical_shift(right)
         matrix = matrix.substitute_all(InvSBox)
         matrix = matrix ^ round_keys[i]
         matrix = InvMixer @ matrix
 
-    matrix = matrix.cylindrical_shift(False)
+    matrix = matrix.cylindrical_shift(right)
     matrix = matrix.substitute_all(InvSBox)
     matrix = matrix ^ round_keys[0]
 
@@ -258,8 +290,12 @@ def decrypt_file(cipher, extra, filename, round_keys):
 
 
 def main():
-    key_str = 'Thats my Kung Fu'
-    # key_str = input()
+    if MAKE:
+        build_s_box()
+        build_inv_s_box()
+
+    # key_str = 'Thats my Kung Fu'
+    key_str = input('Enter key: ')
     if len(key_str) < BYTES:
         key_str = key_str.ljust(BYTES, '$')
     elif len(key_str) > BYTES:
