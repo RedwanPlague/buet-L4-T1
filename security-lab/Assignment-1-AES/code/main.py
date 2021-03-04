@@ -6,7 +6,7 @@ MAKE = True
 """ Used Constants """
 AES_MODULUS = BitVector(bitstring='100011011')
 TWO = BitVector(intVal=2, size=8)
-KEY_LEN = 128
+KEY_LEN = 32
 BYTES = KEY_LEN // 8
 ROW = 4
 COL = BYTES // ROW
@@ -238,6 +238,13 @@ def decrypt_block(cipher, round_keys):
     return matrix.as_line('')
 
 
+def progress(i):
+    if i % 1000 == 0:
+        print('|', end='')
+    elif i % 10 == 0:
+        print('.', end='')
+
+
 def encrypt_whole(data, round_keys):
     cipher = ''
     block_size = 2 * BYTES
@@ -248,10 +255,7 @@ def encrypt_whole(data, round_keys):
             extra = block_size - len(block)
             block = block.ljust(block_size, '0')
         cipher += encrypt_block(block, round_keys)
-        if i % 1000 == 0:
-            print('|', end='')
-        elif i % 10 == 0:
-            print('.', end='')
+        progress(i)
     print()
     return cipher, extra
 
@@ -262,10 +266,7 @@ def decrypt_whole(cipher, extra, round_keys):
     for i in range(0, len(cipher), block_size):
         block = cipher[i:i + block_size]
         data += decrypt_block(block, round_keys)
-        if i % 1000 == 0:
-            print('|', end='')
-        elif i % 10 == 0:
-            print('.', end='')
+        progress(i)
     print()
     return data[:-extra] if extra > 0 else data
 
@@ -289,12 +290,42 @@ def decrypt_file(cipher, extra, filename, round_keys):
         f.write(bytes.fromhex(decrypt_whole(cipher, extra, round_keys)))
 
 
+def for_text(round_keys):
+    msg_str = input('Enter text: ')
+
+    start = time()
+    cipher, extra = encrypt_text(msg_str, round_keys)
+    end = time()
+    print(cipher)
+    print('encryption: {:.3f}'.format(end - start))
+
+    start = time()
+    msg_back = decrypt_text(cipher, extra, round_keys)
+    end = time()
+    print(msg_back)
+    print('decryption: {:.3f}'.format(end - start))
+
+
+def for_file(round_keys):
+    from_file = input('encrypt from: ')
+    into_file = input('decrypt into: ')
+
+    start = time()
+    cipher, extra = encrypt_file(from_file, round_keys)
+    end = time()
+    print('encryption: {:.3f}'.format(end - start))
+
+    start = time()
+    decrypt_file(cipher, extra, into_file, round_keys)
+    end = time()
+    print('decryption: {:.3f}'.format(end - start))
+
+
 def main():
     if MAKE:
         build_s_box()
         build_inv_s_box()
 
-    # key_str = 'Thats my Kung Fu'
     key_str = input('Enter key: ')
     if len(key_str) < BYTES:
         key_str = key_str.ljust(BYTES, '$')
@@ -303,31 +334,14 @@ def main():
 
     round_keys = get_round_keys(key_str)
 
-    msg_str = 'Two One Nine Two'
-
-    start = time()
-    cipher, extra = encrypt_text(msg_str, round_keys)
-    end = time()
-    print(cipher)
-    print('{:.3f}'.format(end - start))
-
-    start = time()
-    msg_back = decrypt_text(cipher, extra, round_keys)
-    end = time()
-    print(msg_back)
-    print('{:.3f}'.format(end - start))
-
-    # from_file, to_file = 'how1.png', 'how2.png'
-    #
-    # start = time()
-    # cipher, extra = encrypt_file(from_file, round_keys)
-    # end = time()
-    # print('{:.3f}'.format(end - start))
-    #
-    # start = time()
-    # decrypt_file(cipher, extra, to_file, round_keys)
-    # end = time()
-    # print('{:.3f}'.format(end - start))
+    while True:
+        option = input('Encrypt (1.Text, 2.File): ')
+        if option == '1':
+            for_text(round_keys)
+        elif option == '2':
+            for_file(round_keys)
+        elif option == 'q':
+            break
 
 
 if __name__ == '__main__':
