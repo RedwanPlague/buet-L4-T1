@@ -11,6 +11,7 @@ BYTES = KEY_LEN // 8
 ROW = 4
 COL = BYTES // ROW
 ROUNDS = 10 + (KEY_LEN - 128) // 32
+FILE_BASE = 'assets/'
 
 """ Used Constant Tables """
 SBox = [
@@ -189,6 +190,7 @@ def text_to_hex(s):
 
 def hex_to_text(s):
     return bytes.fromhex(s).decode('ascii')
+    # return ''.join(chr(int(s[i:i+2], 16)) for i in range(0, len(s), 2))
 
 
 def get_round_keys(key_str):
@@ -280,13 +282,17 @@ def decrypt_text(cipher, extra, round_keys):
 
 
 def encrypt_file(filename, round_keys):
-    with open(filename, 'rb') as f:
-        content = f.read().hex()
-    return encrypt_whole(content, round_keys)
+    try:
+        with open(FILE_BASE+filename, 'rb') as f:
+            content = f.read().hex()
+        return encrypt_whole(content, round_keys)
+    except FileNotFoundError:
+        print('No such file: \'' + filename + '\'')
+        return '', -1
 
 
 def decrypt_file(cipher, extra, filename, round_keys):
-    with open(filename, 'wb') as f:
+    with open(FILE_BASE+filename, 'wb') as f:
         f.write(bytes.fromhex(decrypt_whole(cipher, extra, round_keys)))
 
 
@@ -297,28 +303,32 @@ def for_text(round_keys):
     cipher, extra = encrypt_text(msg_str, round_keys)
     end = time()
     print(cipher)
-    print('encryption: {:.3f}'.format(end - start))
+    print('encryption time: {:.3f}s'.format(end - start))
 
     start = time()
     msg_back = decrypt_text(cipher, extra, round_keys)
     end = time()
     print(msg_back)
-    print('decryption: {:.3f}'.format(end - start))
+    print('decryption time: {:.3f}s'.format(end - start))
 
 
 def for_file(round_keys):
     from_file = input('encrypt from: ')
-    into_file = input('decrypt into: ')
 
     start = time()
     cipher, extra = encrypt_file(from_file, round_keys)
     end = time()
-    print('encryption: {:.3f}'.format(end - start))
+    print('encryption time: {:.3f}s'.format(end - start))
+
+    if extra == -1:
+        return
+
+    into_file = input('decrypt into: ')
 
     start = time()
     decrypt_file(cipher, extra, into_file, round_keys)
     end = time()
-    print('decryption: {:.3f}'.format(end - start))
+    print('decryption time: {:.3f}s'.format(end - start))
 
 
 def main():
@@ -332,7 +342,10 @@ def main():
     elif len(key_str) > BYTES:
         key_str = key_str[0:BYTES]
 
+    start = time()
     round_keys = get_round_keys(key_str)
+    end = time()
+    print('Key Scheduling: {:.3f}s'.format(end - start))
 
     while True:
         option = input('Encrypt (1.Text, 2.File): ')
