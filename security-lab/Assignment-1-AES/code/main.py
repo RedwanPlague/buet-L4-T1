@@ -63,10 +63,10 @@ def build_s_box():
         b = inverse(BitVector(intVal=i, size=8))
         s = offset ^ b ^ (b << 1) ^ (b << 1) ^ (b << 1) ^ (b << 1)
         SBox[i] = s
-    for i in range(0, 0x100):
-        print(hex(int(SBox[i])), end=' ')
-        if i % 0x10 == 0xF:
-            print()
+    # for i in range(0, 0x100):
+    #     print(hex(int(SBox[i])), end=' ')
+    #     if i % 0x10 == 0xF:
+    #         print()
 
 
 def build_inv_s_box():
@@ -103,7 +103,7 @@ class GaloisAESMatrix:
             idx = 0
             for j in range(m):
                 for i in range(n):
-                    self.ar[i][j] = BitVector(hexstring=shex[idx:idx + 2])
+                    self.ar[i][j] = BitVector(hexstring=shex[idx:idx+2])
                     idx += 2
         else:
             assert len(list_2d) > 0
@@ -236,9 +236,9 @@ def decrypt_block(cipher, round_keys):
 
 def progress(i):
     if i % 1000 == 0:
-        print('|', end='')
+        print('|', end='', flush=True)
     elif i % 10 == 0:
-        print('.', end='')
+        print('.', end='', flush=True)
 
 
 def encrypt_whole(data, round_keys):
