@@ -13,6 +13,7 @@ COL = BYTES // ROW
 ROUNDS = 10 + (KEY_LEN - 128) // 32
 FILE_BASE = 'assets/'
 
+
 """ Used Constant Tables """
 SBox = list(map(lambda a: BitVector(intVal=a, size=8), [
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -59,34 +60,44 @@ def inverse(bv):
 
 def build_s_box():
     offset = BitVector(intVal=0x63, size=8)
-    for i in range(0, 0x100):
-        b = inverse(BitVector(intVal=i, size=8))
+    SBox[0] = offset
+    InvSBox[0x63] = BitVector(intVal=0, size=8)
+    for i in range(1, 0x100):
+        cur = BitVector(intVal=i, size=8)
+        b = cur.gf_MI(AES_MODULUS, 8)
         s = offset ^ b ^ (b << 1) ^ (b << 1) ^ (b << 1) ^ (b << 1)
         SBox[i] = s
+        InvSBox[int(s)] = cur
     # for i in range(0, 0x100):
     #     print(hex(int(SBox[i])), end=' ')
     #     if i % 0x10 == 0xF:
     #         print()
 
 
-def build_inv_s_box():
-    offset = BitVector(intVal=0x5, size=8)
-    for i in range(0, 0x100):
-        s = BitVector(intVal=i, size=8)
-        b = offset ^ (s << 1) ^ (s << 2) ^ (s << 3)
-        InvSBox[i] = inverse(b)
-    # for i in range(0, 0x100):
-    #     print(hex(int(InvSBox[i])), end=' ')
-    #     if i % 0x10 == 0xF:
-    #         print()
+# def build_inv_s_box():
+#     offset = BitVector(intVal=0x5, size=8)
+#     for i in range(0, 0x100):
+#         s = BitVector(intVal=i, size=8)
+#         b = offset ^ (s << 1) ^ (s << 2) ^ (s << 3)
+#         InvSBox[i] = inverse(b)
+#     for i in range(0, 0x100):
+#         print(hex(int(InvSBox[i])), end=' ')
+#         if i % 0x10 == 0xF:
+#             print()
 
 
+p_start = time()
+
+# to speed up the multiplication process
 multiplication_table = [[
     BitVector(intVal=j, size=8).gf_multiply_modular(BitVector(intVal=i, size=8), AES_MODULUS, 8)
     for i in range(0x100)] for j in range(0x10)
 ]
 left = [[(j + i) % COL for j in range(COL)] for i in range(ROW)]
 right = [[(j - i + COL) % COL for j in range(COL)] for i in range(ROW)]
+
+p_end = time()
+print('Preprocess time: {:.3f}s'.format(p_end - p_start))
 
 
 def multiply(bv1, bv2):
@@ -184,7 +195,6 @@ def text_to_hex(s):
 
 def hex_to_text(s):
     return bytes.fromhex(s).decode('ascii')
-    # return ''.join(chr(int(s[i:i+2], 16)) for i in range(0, len(s), 2))
 
 
 def get_round_keys(key_str):
@@ -242,9 +252,8 @@ def progress(i):
 
 
 def encrypt_whole(data, round_keys):
-    cipher = ''
+    cipher, extra = '', 0
     block_size = 2 * BYTES
-    extra = 0
     for i in range(0, len(data), block_size):
         block = data[i:i + block_size]
         if len(block) < block_size:
@@ -296,13 +305,13 @@ def for_text(round_keys):
     start = time()
     cipher, extra = encrypt_text(msg_str, round_keys)
     end = time()
-    print(cipher)
+    print('cipher: ' + cipher)
     print('encryption time: {:.3f}s'.format(end - start))
 
     start = time()
     msg_back = decrypt_text(cipher, extra, round_keys)
     end = time()
-    print(msg_back)
+    print('decrypted: ' + msg_back)
     print('decryption time: {:.3f}s'.format(end - start))
 
 
@@ -327,8 +336,11 @@ def for_file(round_keys):
 
 def main():
     if MAKE:
+        start = time()
         build_s_box()
-        build_inv_s_box()
+        # build_inv_s_box()
+        end = time()
+        print('(Inv)SBox making time: {:.3f}s'.format(end - start))
 
     key_str = input('Enter key: ')
     if len(key_str) < BYTES:
@@ -339,7 +351,7 @@ def main():
     start = time()
     round_keys = get_round_keys(key_str)
     end = time()
-    print('Key Scheduling: {:.3f}s'.format(end - start))
+    print('Key Scheduling time: {:.3f}s'.format(end - start))
 
     while True:
         option = input('Encrypt (1.Text, 2.File): ')
