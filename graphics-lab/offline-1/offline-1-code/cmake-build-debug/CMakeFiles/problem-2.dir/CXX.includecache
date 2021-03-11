@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/problem-2.cpp
+GL/glut.h
+-
+cmath
+-
+random
+-
+chrono
+-
+

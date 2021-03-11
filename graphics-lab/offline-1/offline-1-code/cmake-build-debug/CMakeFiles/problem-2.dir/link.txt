@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/problem-2.dir/problem-2.cpp.o  -o problem-2  -lglut -lGLU -lGL 

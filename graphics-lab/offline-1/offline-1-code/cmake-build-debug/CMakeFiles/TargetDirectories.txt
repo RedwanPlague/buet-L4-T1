@@ -1,0 +1,5 @@
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/test.dir
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/problem-1.dir
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/problem-2.dir
+/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/edit_cache.dir
