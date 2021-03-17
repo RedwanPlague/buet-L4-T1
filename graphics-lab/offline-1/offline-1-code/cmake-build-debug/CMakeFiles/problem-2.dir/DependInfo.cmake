@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/problem-2.cpp" "/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1-code/cmake-build-debug/CMakeFiles/problem-2.dir/problem-2.cpp.o"
+  "/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1/offline-1-code/problem-2.cpp" "/home/redwan/Documents/L4-T1/all-codes/graphics-lab/offline-1/offline-1-code/cmake-build-debug/CMakeFiles/problem-2.dir/problem-2.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
