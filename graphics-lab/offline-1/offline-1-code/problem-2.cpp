@@ -10,14 +10,14 @@ const double pi = acos(-1);
 const double frameSize = 150;
 const double arenaRadius = 125;
 const double ballRadius = 15;
-const double initShift = 0.01;
 const double shiftInc = 0.001;
 const double shiftUp = 0.1;
 const double shiftDown = 0.001;
 const int ballCount = 5;
 int ballUse = 0;
-double shift, shiftKeep;
+double shift = 0.01;
 bool separate[ballCount][ballCount];
+bool running = true;
 
 struct Point {
     double x, y, z;
@@ -138,7 +138,7 @@ struct Ball {
         glPushMatrix();
         {
             glTranslatef(center.x, center.y, center.z);
-            drawCircle(radius, 50);
+            drawCircle(radius, 30);
         }
         glPopMatrix();
     }
@@ -178,24 +178,20 @@ void updateBalls() {
 double count = 0;
 
 void animate() {
-    if (ballUse < ballCount) {
-        count += 0.0005;
-        ballUse = floor(count);
+    if (running) {
+        if (ballUse < ballCount) {
+            count += 0.0005;
+            ballUse = floor(count);
+        }
+        updateBalls();
+        // codes for any changes in Models, Camera
+        glutPostRedisplay();
     }
-    updateBalls();
-    // codes for any changes in Models, Camera
-    glutPostRedisplay();
 }
 
 void keyboardListener(unsigned char key, __unused int x, __unused int y) {
     if (key == 'p') {
-        if (shift > 0) {
-            shiftKeep = shift;
-            shift = 0;
-        }
-        else {
-            shift = shiftKeep;
-        }
+        running = !running;
     }
 }
 
@@ -268,8 +264,6 @@ void init() {
             separate[i][j] = false;
         }
     }
-
-    shift = initShift;
 
     // clear the screen
     glClearColor(0, 0, 0, 0);
