@@ -64,11 +64,11 @@ class Matrix {
     }
 
     Vector operator*(const Vector &v) const {
-        double x = a[0][0] * v.x + a[0][1] * v.y + a[0][2] * v.z + a[0][3];
-        double y = a[1][0] * v.x + a[1][1] * v.y + a[1][2] * v.z + a[1][3];
-        double z = a[2][0] * v.x + a[2][1] * v.y + a[2][2] * v.z + a[2][3];
-        double d = a[3][0] * v.x + a[3][1] * v.y + a[3][2] * v.z + a[3][3];
-        return {x / d, y / d, z / d};
+        double p[4];
+        for (int i = 0; i < D; i++) {
+            p[i] = a[i][0] * v.x + a[i][1] * v.y + a[i][2] * v.z + a[i][3];
+        }
+        return {p[0] / p[3], p[1] / p[3], p[2] / p[3]};
     }
 
     static Matrix I;

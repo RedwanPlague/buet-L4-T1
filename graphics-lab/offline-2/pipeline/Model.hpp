@@ -3,11 +3,8 @@
 
 #include "Matrix.hpp"
 #include "Vector.hpp"
+#include <istream>
 #include <vector>
-
-struct Triangle {
-    Point a, b, c;
-};
 
 class Model {};
 

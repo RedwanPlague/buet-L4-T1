@@ -18,5 +18,8 @@ struct View {
 int main() {
     fin.open("test-cases/1/scene.txt");
 
+    Vector a({1, 2, 3});
+    cout << a << endl;
+
     return 0;
 }
