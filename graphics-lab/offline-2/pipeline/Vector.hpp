@@ -5,6 +5,8 @@
 #include <istream>
 #include <ostream>
 
+const double pi = acos(-1);
+
 struct Vector {
     double x, y, z;
 
@@ -17,8 +19,8 @@ struct Vector {
 
     Vector operator+(const Vector &v) const { return {x + v.x, y + v.y, z + v.z}; }
     Vector operator-(const Vector &v) const { return {x - v.x, y - v.y, z - v.z}; }
-    Vector operator*(double m) { return {m * x, m * y, m * z}; }
-    Vector operator/(double m) { return {m / x, m / y, m / z}; }
+    Vector operator*(double m) { return {x * m, y * m, z * m}; }
+    Vector operator/(double m) { return {x / m, y / m, z / m}; }
     friend Vector operator*(double m, const Vector &v);
     friend Vector operator/(double m, const Vector &v);
     Vector operator-() const { return {-x, -y, -z}; }
@@ -26,7 +28,6 @@ struct Vector {
     double norm() const { return sqrt(x * x + y * y + z * z); }
 };
 
-Vector operator/(double m, const Vector &v) { return {m / v.x, m / v.y, m / v.z}; }
 Vector operator*(double m, const Vector &v) { return {m * v.x, m * v.y, m * v.z}; }
 
 double dot(const Vector &a, const Vector &b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
@@ -47,10 +48,10 @@ std::ostream &operator<<(std::ostream &out, const Vector &v) {
 
 typedef Vector Point;
 
-Point rodrigues(Point x, Vector a /*axis*/, double angle) {
-    const double pi = acos(-1);
-    double cost = cos(angle * pi / 180);
-    double sint = sin(angle * pi / 180);
+Point rodrigues(Point x, Vector a /*axis (normalized)*/, double angle) {
+    angle *= pi / 180;
+    double cost = cos(angle);
+    double sint = sin(angle);
 
     return cost * x + (1 - cost) * dot(a, x) * a + sint * cross(a, x);
 }

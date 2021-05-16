@@ -1,23 +1,31 @@
 #include "Matrix.hpp"
 #include "Shapes.hpp"
 #include "Vector.hpp"
+#include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stack>
 #include <string>
 
 using namespace std;
+namespace fs = filesystem;
+typedef fs::path path;
 
-const string in_dir = "test-cases/1/";
-const string out_dir = "output/1/";
+const int precision = 7;
+
+const path sub_dir = path("3");
+const path in_dir = path("test-cases") / sub_dir;
+const path out_dir = path("output") / sub_dir;
 
 Point eye;
 Vector look, up;
 double fovY, aspectRatio, nearDist, farDist;
 
 void stage1() {
-    ifstream fin(in_dir + "scene.txt");
-    ofstream fout(out_dir + "stage1");
+    ifstream fin(in_dir / path("scene.txt"));
+    ofstream fout(out_dir / path("stage1.txt"));
+    fout << setprecision(precision) << fixed;
 
     fin >> eye >> look >> up;
     fin >> fovY >> aspectRatio >> nearDist >> farDist;
@@ -67,12 +75,15 @@ void stage1() {
     }
 
     fin.close();
+    fout.close();
 }
 
 int main() {
+    if (!(fs::is_directory(out_dir) && fs::exists(out_dir))) {
+        fs::create_directories(out_dir);
+    }
 
-    Vector a({1, 2, 3});
-    cout << a << endl;
+    stage1();
 
     return 0;
 }

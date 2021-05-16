@@ -91,18 +91,19 @@ class Matrix {
 
     static Matrix rotator(double angle, Vector axis) {
         Matrix ret = I;
-        Vector c1 = rodrigues({1, 0, 0}, axis, angle);
-        Vector c2 = rodrigues({0, 1, 0}, axis, angle);
-        Vector c3 = rodrigues({0, 0, 1}, axis, angle);
-        ret.a[0][0] = c1.x;
-        ret.a[1][0] = c1.y;
-        ret.a[2][0] = c1.z;
-        ret.a[0][1] = c2.x;
-        ret.a[1][1] = c2.y;
-        ret.a[2][1] = c2.z;
-        ret.a[0][2] = c3.x;
-        ret.a[1][2] = c3.y;
-        ret.a[2][2] = c3.z;
+        axis = axis / axis.norm();
+        Vector c0 = rodrigues({1, 0, 0}, axis, angle);
+        Vector c1 = rodrigues({0, 1, 0}, axis, angle);
+        Vector c2 = rodrigues({0, 0, 1}, axis, angle);
+        ret.a[0][0] = c0.x;
+        ret.a[1][0] = c0.y;
+        ret.a[2][0] = c0.z;
+        ret.a[0][1] = c1.x;
+        ret.a[1][1] = c1.y;
+        ret.a[2][1] = c1.z;
+        ret.a[0][2] = c2.x;
+        ret.a[1][2] = c2.y;
+        ret.a[2][2] = c2.z;
         return ret;
     }
 
