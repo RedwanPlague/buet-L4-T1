@@ -17,6 +17,7 @@ class Matrix {
     Matrix() = default;
 
     Matrix(double val) {
+        memset(a, 0, sizeof(a));
         for (int i = 0; i < D; i++) {
             a[i][i] = val;
         }
@@ -107,7 +108,42 @@ class Matrix {
         return ret;
     }
 
-    static Matrix projector() { return I; }
+    static Matrix viewer(Point eye, Vector look, Vector up) {
+        Vector l = look - eye;
+        l = l / l.norm();
+        Vector r = cross(l, up);
+        r = r / r.norm();
+        Vector u = cross(r, l);
+
+        Matrix T = translator(-eye);
+
+        Matrix R = I;
+        R.a[0][0] = r.x;
+        R.a[0][1] = r.y;
+        R.a[0][2] = r.z;
+        R.a[1][0] = u.x;
+        R.a[1][1] = u.y;
+        R.a[1][2] = u.z;
+        R.a[2][0] = -l.x;
+        R.a[2][1] = -l.y;
+        R.a[2][2] = -l.z;
+
+        return R * T;
+    }
+
+    static Matrix projector(double fovY, double aspectRatio, double near, double far) {
+        fovY *= pi / 180;
+        double fovX = fovY * aspectRatio;
+
+        Matrix ret(0);
+        ret.a[0][0] = 1 / tan(fovX / 2);
+        ret.a[1][1] = 1 / tan(fovY / 2);
+        ret.a[2][2] = -(far + near) / (far - near);
+        ret.a[2][3] = -(2 * far * near) / (far - near);
+        ret.a[3][2] = -1;
+
+        return ret;
+    }
 
     friend std::ostream &operator<<(std::ostream &out, const Matrix &m);
 };
