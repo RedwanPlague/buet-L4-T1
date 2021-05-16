@@ -89,13 +89,22 @@ class Matrix {
         return ret;
     }
 
-    /* static Matrix rotator(double angle, Vector axis) { */
-    /*     Matrix ret = I; */
-    /*     ret.a[0][0] = scale.x; */
-    /*     ret.a[1][1] = scale.y; */
-    /*     ret.a[2][2] = scale.z; */
-    /*     return ret; */
-    /* } */
+    static Matrix rotator(double angle, Vector axis) {
+        Matrix ret = I;
+        Vector c1 = rodrigues({1, 0, 0}, axis, angle);
+        Vector c2 = rodrigues({0, 1, 0}, axis, angle);
+        Vector c3 = rodrigues({0, 0, 1}, axis, angle);
+        ret.a[0][0] = c1.x;
+        ret.a[1][0] = c1.y;
+        ret.a[2][0] = c1.z;
+        ret.a[0][1] = c2.x;
+        ret.a[1][1] = c2.y;
+        ret.a[2][1] = c2.z;
+        ret.a[0][2] = c3.x;
+        ret.a[1][2] = c3.y;
+        ret.a[2][2] = c3.z;
+        return ret;
+    }
 
     static Matrix projector() { return I; }
 
