@@ -72,13 +72,23 @@ class Matrix {
         return {p[0] / p[3], p[1] / p[3], p[2] / p[3]};
     }
 
+    void setrow(int r, Point p) {
+        a[r][0] = p.x;
+        a[r][1] = p.y;
+        a[r][2] = p.z;
+    }
+
+    void setcol(int c, Point p) {
+        a[0][c] = p.x;
+        a[1][c] = p.y;
+        a[2][c] = p.z;
+    }
+
     static Matrix I;
 
     static Matrix translator(Vector shift) {
         Matrix ret = I;
-        ret.a[0][3] = shift.x;
-        ret.a[1][3] = shift.y;
-        ret.a[2][3] = shift.z;
+        ret.setcol(3, shift);
         return ret;
     }
 
@@ -91,20 +101,15 @@ class Matrix {
     }
 
     static Matrix rotator(double angle, Vector axis) {
-        Matrix ret = I;
         axis = axis / axis.norm();
         Vector c0 = rodrigues({1, 0, 0}, axis, angle);
         Vector c1 = rodrigues({0, 1, 0}, axis, angle);
         Vector c2 = rodrigues({0, 0, 1}, axis, angle);
-        ret.a[0][0] = c0.x;
-        ret.a[1][0] = c0.y;
-        ret.a[2][0] = c0.z;
-        ret.a[0][1] = c1.x;
-        ret.a[1][1] = c1.y;
-        ret.a[2][1] = c1.z;
-        ret.a[0][2] = c2.x;
-        ret.a[1][2] = c2.y;
-        ret.a[2][2] = c2.z;
+
+        Matrix ret = I;
+        ret.setcol(0, c0);
+        ret.setcol(1, c1);
+        ret.setcol(2, c2);
         return ret;
     }
 
@@ -118,15 +123,9 @@ class Matrix {
         Matrix T = translator(-eye);
 
         Matrix R = I;
-        R.a[0][0] = r.x;
-        R.a[0][1] = r.y;
-        R.a[0][2] = r.z;
-        R.a[1][0] = u.x;
-        R.a[1][1] = u.y;
-        R.a[1][2] = u.z;
-        R.a[2][0] = -l.x;
-        R.a[2][1] = -l.y;
-        R.a[2][2] = -l.z;
+        R.setrow(0, r);
+        R.setrow(1, u);
+        R.setrow(2, -l);
 
         return R * T;
     }
@@ -135,7 +134,7 @@ class Matrix {
         fovY *= pi / 180;
         double fovX = fovY * aspectRatio;
 
-        Matrix ret(0);
+        Matrix ret = 0;
         ret.a[0][0] = 1 / tan(fovX / 2);
         ret.a[1][1] = 1 / tan(fovY / 2);
         ret.a[2][2] = -(far + near) / (far - near);
@@ -158,6 +157,6 @@ std::ostream &operator<<(std::ostream &out, const Matrix &m) {
     return out;
 }
 
-Matrix Matrix::I = Matrix(1);
+Matrix Matrix::I = 1;
 
 #endif // MATRIX_H
