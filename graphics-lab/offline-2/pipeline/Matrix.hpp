@@ -87,26 +87,26 @@ class Matrix {
     static Matrix I;
 
     static Matrix translator(Vector shift) {
-        Matrix ret = I;
+        Matrix ret = 1;
         ret.setcol(3, shift);
         return ret;
     }
 
     static Matrix scalar(Vector scale) {
-        Matrix ret = I;
+        Matrix ret = 1;
         ret.a[0][0] = scale.x;
         ret.a[1][1] = scale.y;
         ret.a[2][2] = scale.z;
         return ret;
     }
 
-    static Matrix rotator(double angle, Vector axis) {
+    static Matrix rotator(double angle /*degrees*/, Vector axis) {
         axis = axis / axis.norm();
         Vector c0 = rodrigues({1, 0, 0}, axis, angle);
         Vector c1 = rodrigues({0, 1, 0}, axis, angle);
         Vector c2 = rodrigues({0, 0, 1}, axis, angle);
 
-        Matrix ret = I;
+        Matrix ret = 1;
         ret.setcol(0, c0);
         ret.setcol(1, c1);
         ret.setcol(2, c2);
@@ -122,7 +122,7 @@ class Matrix {
 
         Matrix T = translator(-eye);
 
-        Matrix R = I;
+        Matrix R = 1;
         R.setrow(0, r);
         R.setrow(1, u);
         R.setrow(2, -l);
@@ -130,7 +130,7 @@ class Matrix {
         return R * T;
     }
 
-    static Matrix projector(double fovY, double aspectRatio, double near, double far) {
+    static Matrix projector(double fovY /*degrees*/, double aspectRatio, double near, double far) {
         fovY *= pi / 180;
         double fovX = fovY * aspectRatio;
 

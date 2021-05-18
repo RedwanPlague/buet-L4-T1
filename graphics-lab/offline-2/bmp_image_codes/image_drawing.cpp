@@ -31,17 +31,17 @@ int main() {
     }
 
     // my code
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < 100; i++) {
         image.set_pixel(i, 0, 255, 255, 255);
-        image.set_pixel(i, 299, 255, 255, 255);
-    }
-    for (int j = 0; j < 300; j++) {
-        image.set_pixel(0, j, 255, 255, 255);
-        image.set_pixel(499, j, 255, 255, 255);
+        image.set_pixel(i, 1, 255, 255, 255);
+        image.set_pixel(i, 2, 255, 255, 255);
+        image.set_pixel(i, 3, 255, 255, 255);
+        image.set_pixel(i, 4, 255, 255, 255);
+        image.set_pixel(i, 5, 255, 255, 255);
     }
     // my code
 
-    image.save_image("test.bmp");
+    image.save_image("new-test.bmp");
 
     return 0;
 }

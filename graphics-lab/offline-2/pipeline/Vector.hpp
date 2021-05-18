@@ -1,9 +1,11 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <algorithm>
 #include <cmath>
 #include <istream>
 #include <ostream>
+#include <utility>
 
 const double pi = acos(-1);
 
@@ -54,6 +56,19 @@ Point rodrigues(Point x, Vector a /*axis (normalized)*/, double angle) {
     double sint = sin(angle);
 
     return cost * x + (1 - cost) * dot(a, x) * a + sint * cross(a, x);
+}
+
+// finds the Point between a and b that has y = y
+std::pair<bool, Point> intersect_at_y(Point a, Point b, double y) {
+    double coeff = (y - a.y) / (a.y - b.y);
+    double x = a.x + (a.x - b.x) * coeff;
+    double z = a.z + (a.z - b.z) * coeff;
+    Point p(x, y, z);
+
+    double eps = 1e-3;
+    bool valid = x > std::min(a.x, b.x) - eps && x < std::max(a.x, b.x) + eps && z > std::min(a.z, b.z) - eps &&
+                 z < std::max(a.z, b.z) + eps;
+    return std::make_pair(valid, p);
 }
 
 #endif // VECTOR_H
