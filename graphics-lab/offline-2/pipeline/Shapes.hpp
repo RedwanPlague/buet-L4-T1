@@ -20,7 +20,6 @@ struct Triangle {
     inline double miny() { return std::min(a.y, std::min(b.y, c.y)); }
     inline double maxy() { return std::max(a.y, std::max(b.y, c.y)); }
 
-    // assumes there are atleast two intersections
     std::pair<Point, Point> cut_at_y(double y) {
         auto pab = intersect_at_y(a, b, y);
         auto pbc = intersect_at_y(b, c, y);
@@ -41,6 +40,10 @@ struct Triangle {
         }
         else if (pbc.first) {
             A = B = pbc;
+        }
+
+        if (A.second.x > B.second.x) {
+            swap(A, B);
         }
         return std::make_pair(A.second, B.second);
     }
@@ -65,7 +68,6 @@ struct RandomColor {
         r = rand() % 256;
         g = rand() % 256;
         b = rand() % 256;
-        /* r = 255, g = 0, b = 0; */
     }
 };
 

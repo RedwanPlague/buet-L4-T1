@@ -4,6 +4,7 @@
 #include "bitmap_image.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -18,7 +19,7 @@ typedef fs::path path;
 
 const int precision = 7;
 
-const path sub_dir = path("3");
+const path sub_dir = path("4");
 const path in_dir = path("test-cases") / sub_dir;
 const path out_dir = path("output") / sub_dir;
 
@@ -111,57 +112,91 @@ void stage3() {
     fout.close();
 }
 
-void make_fit(int &x, int l /*inclusive*/, int r /*exclusive*/) { x = (x < l) ? l : ((x < r) ? x : r - 1); }
+double **make_buffer(int W, int H, double mx) {
+    double **buff = new double *[W];
+    for (int i = 0; i < W; i++) {
+        buff[i] = new double[H];
+        fill(buff[i], buff[i] + H, mx + eps);
+    }
+    return buff;
+}
+
+/* void write_buffer(double **buff, int W, int H, double mx) { */
+/*     ofstream fout(out_dir / path("z_buffer.txt")); */
+/*     fout << setprecision(precision) << fixed; */
+/*     // output z_buff here */
+/*     fout.close(); */
+/* } */
+
+void clear_buffer(double **buff, int W) {
+    for (int i = 0; i < W; i++) {
+        delete[] buff[i];
+    }
+    delete[] buff;
+}
+
+// returns if polygon should be drawn
+bool make_fit(int &a, int &b, int l /*inclusive*/, int r /*exclusive*/) {
+    if (a >= r || a < l) { // polygon completely outside of viewing area
+        return false;
+    }
+    a = (a < l) ? l : ((a < r) ? a : r - 1);
+    b = (b < l) ? l : ((b < r) ? b : r - 1);
+    return true;
+}
 
 void stage4() {
     ifstream confin(in_dir / path("config.txt"));
 
     int screen_width, screen_height;
-    double left, bottom, z_front, z_rear;
+    double l, b, z_front, z_rear;
 
     confin >> screen_width >> screen_height;
-    confin >> left >> bottom >> z_front >> z_rear;
+    confin >> l >> b >> z_front >> z_rear;
 
-    double right = -left, top = -bottom;
+    double r = -l, t = -b;
 
     confin.close();
 
-    double **z_buff = new double *[screen_width];
-    for (int i = 0; i < screen_width; i++) {
-        z_buff[i] = new double[screen_height];
-        fill(z_buff[i], z_buff[i] + screen_height, z_rear + 1e-7);
-    }
-
-    double dx = (right - left) / (screen_width - 1);
-    double dy = (top - bottom) / (screen_height - 1);
+    double dx = (r - l) / screen_width;
+    double dy = (t - b) / screen_height;
+    double left = l + dx / 2;
+    double top = t - dy / 2;
 
     bitmap_image image(screen_width, screen_height);
+    double **z_buff = make_buffer(screen_width, screen_height, z_rear);
 
     ifstream fin(out_dir / path("stage3.txt"));
     Triangle triangle;
+
     while (fin >> triangle) {
         RandomColor color;
-        int top_scan = round((top - triangle.maxy()) / dy);
-        int bottom_scan = round((top - triangle.miny()) / dy);
-        make_fit(top_scan, 0, screen_height);
-        make_fit(bottom_scan, 0, screen_height);
-        double ys = top - top_scan * dy;
-        for (int yi = top_scan; yi <= bottom_scan; yi++, ys -= dy) {
+
+        int top_cell = round((top - triangle.maxy()) / dy);
+        int bottom_cell = round((top - triangle.miny()) / dy);
+        if (!make_fit(top_cell, bottom_cell, 0, screen_height)) {
+            continue;
+        }
+
+        double ys = top - top_cell * dy;
+        for (int yi = top_cell; yi <= bottom_cell; yi++, ys -= dy) {
+
             auto cuty = triangle.cut_at_y(ys);
             Point a = cuty.first, b = cuty.second;
-            if (a.x > b.x) {
-                swap(a, b);
+
+            int left_cell = round((a.x - left) / dx);
+            int right_cell = round((b.x - left) / dx);
+            if (!make_fit(left_cell, right_cell, 0, screen_width)) {
+                continue;
             }
+
             double coeff = (a.z - b.z) / (a.x - b.x);
-            int left_scan = round((a.x - left) / dx);
-            int right_scan = round((b.x - left) / dx);
-            make_fit(left_scan, 0, screen_width);
-            make_fit(right_scan, 0, screen_width);
-            double xp = left + left_scan * dx;
-            for (int xi = left_scan; xi <= right_scan; xi++, xp += dx) {
-                double zp = (xp - a.x) * coeff;
-                if (zp < z_buff[xi][yi]) {
-                    z_buff[xi][yi] = zp;
+            double xs = left + left_cell * dx;
+            for (int xi = left_cell; xi <= right_cell; xi++, xs += dx) {
+
+                double zs = a.z + (xs - a.x) * coeff;
+                if (z_front < zs + eps && zs < z_buff[xi][yi]) {
+                    z_buff[xi][yi] = zs;
                     image.set_pixel(xi, yi, color.r, color.g, color.b);
                 }
             }
@@ -170,16 +205,8 @@ void stage4() {
     fin.close();
 
     image.save_image(out_dir / path("out.bmp"));
-
-    /* ofstream fout(out_dir / path("z_buffer.txt")); */
-    /* fout << setprecision(precision) << fixed; */
-    // output z_buff here
-    /* fout.close(); */
-
-    for (int i = 0; i < screen_width; i++) {
-        delete[] z_buff[i];
-    }
-    delete[] z_buff;
+    /* write_buffer(z_buff, screen_width, screen_height, z_rear); */
+    clear_buffer(z_buff, screen_width);
 }
 
 int main() {
@@ -187,10 +214,12 @@ int main() {
         fs::create_directories(out_dir);
     }
 
+    srand(time(0));
+
     clock_t start = clock();
-    /* stage1(); */
-    /* stage2(); */
-    /* stage3(); */
+    stage1();
+    stage2();
+    stage3();
     stage4();
     clock_t end = clock();
     cout << "time needed: " << (end - start + 0.0) / CLOCKS_PER_SEC << " seconds" << endl;

@@ -8,6 +8,7 @@
 #include <utility>
 
 const double pi = acos(-1);
+const double eps = 1e-7;
 
 struct Vector {
     double x, y, z;
@@ -65,9 +66,7 @@ std::pair<bool, Point> intersect_at_y(Point a, Point b, double y) {
     double z = a.z + (a.z - b.z) * coeff;
     Point p(x, y, z);
 
-    double eps = 1e-3;
-    bool valid = x > std::min(a.x, b.x) - eps && x < std::max(a.x, b.x) + eps && z > std::min(a.z, b.z) - eps &&
-                 z < std::max(a.z, b.z) + eps;
+    bool valid = x + eps > std::min(a.x, b.x) && x < std::max(a.x, b.x) + eps;
     return std::make_pair(valid, p);
 }
 
