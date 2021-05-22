@@ -41,6 +41,9 @@ struct Triangle {
         else if (pbc.first) {
             A = B = pbc;
         }
+        else {
+            return std::make_pair(Point(1e5, 1e5, 1e5), Point(1e5, 1e5, 1e5));
+        }
 
         if (A.second.x > B.second.x) {
             swap(A, B);

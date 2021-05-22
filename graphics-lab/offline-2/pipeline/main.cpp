@@ -19,7 +19,7 @@ typedef fs::path path;
 
 const int precision = 7;
 
-const path sub_dir = path("5");
+const path sub_dir = path("4");
 const path in_dir = path("test-cases") / sub_dir;
 const path out_dir = path("output") / sub_dir;
 
@@ -121,12 +121,19 @@ double **make_buffer(int W, int H, double mx) {
     return buff;
 }
 
-/* void write_buffer(double **buff, int W, int H, double mx) { */
-/*     ofstream fout(out_dir / path("z_buffer.txt")); */
-/*     fout << setprecision(precision) << fixed; */
-/*     // output z_buff here */
-/*     fout.close(); */
-/* } */
+void write_buffer(double **buff, int W, int H, double mx) {
+    ofstream fout(out_dir / path("z_buffer.txt"));
+    fout << setprecision(6) << fixed;
+    for (int j = 0; j < H; j++) {
+        for (int i = 0; i < W; i++) {
+            if (buff[i][j] < mx + eps) {
+                fout << buff[i][j] << '\t';
+            }
+        }
+        fout << endl;
+    }
+    fout.close();
+}
 
 void clear_buffer(double **buff, int W) {
     for (int i = 0; i < W; i++) {
@@ -179,7 +186,7 @@ void stage4() {
         }
 
         double ys = top - top_cell * dy;
-        for (int yi = top_cell; yi <= bottom_cell; yi++, ys -= dy) {
+        for (int j = top_cell; j <= bottom_cell; j++, ys -= dy) {
 
             auto cuty = triangle.cut_at_y(ys);
             Point a = cuty.first, b = cuty.second;
@@ -192,12 +199,12 @@ void stage4() {
 
             double coeff = (a.z - b.z) / (a.x - b.x);
             double xs = left + left_cell * dx;
-            for (int xi = left_cell; xi <= right_cell; xi++, xs += dx) {
+            for (int i = left_cell; i <= right_cell; i++, xs += dx) {
 
                 double zs = a.z + (xs - a.x) * coeff;
-                if (z_front < zs + eps && zs < z_buff[xi][yi]) {
-                    z_buff[xi][yi] = zs;
-                    image.set_pixel(xi, yi, color.r, color.g, color.b);
+                if (z_front < zs + eps && zs < z_buff[i][j]) {
+                    z_buff[i][j] = zs;
+                    image.set_pixel(i, j, color.r, color.g, color.b);
                 }
             }
         }
@@ -205,7 +212,7 @@ void stage4() {
     fin.close();
 
     image.save_image(out_dir / path("out.bmp"));
-    /* write_buffer(z_buff, screen_width, screen_height, z_rear); */
+    write_buffer(z_buff, screen_width, screen_height, z_rear);
     clear_buffer(z_buff, screen_width);
 }
 
@@ -214,7 +221,7 @@ int main() {
         fs::create_directories(out_dir);
     }
 
-    /* srand(time(0)); */
+    srand(time(0));
 
     clock_t start = clock();
     stage1();
@@ -222,7 +229,7 @@ int main() {
     stage3();
     stage4();
     clock_t end = clock();
-    cout << "time needed: " << (end - start + 0.0) / CLOCKS_PER_SEC << " seconds" << endl;
+    cout << "time needed: " << 1000.0 * (end - start + 0.0) / CLOCKS_PER_SEC << " ms" << endl;
 
     return 0;
 }

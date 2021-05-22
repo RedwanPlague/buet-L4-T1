@@ -18,8 +18,6 @@ struct Vector {
 
     Vector(double x, double y, double z) : x(x), y(y), z(z) {}
 
-    Vector(const Vector &v) : x(v.x), y(v.y), z(v.z) {}
-
     Vector operator+(const Vector &v) const { return {x + v.x, y + v.y, z + v.z}; }
     Vector operator-(const Vector &v) const { return {x - v.x, y - v.y, z - v.z}; }
     Vector operator*(double m) { return {x * m, y * m, z * m}; }

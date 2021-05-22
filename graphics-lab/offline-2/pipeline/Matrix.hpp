@@ -31,6 +31,15 @@ class Matrix {
         }
     }
 
+    Matrix operator=(const Matrix &m) {
+        for (int i = 0; i < D; i++) {
+            for (int j = 0; j < D; j++) {
+                a[i][j] = m.a[i][j];
+            }
+        }
+        return *this;
+    }
+
     Matrix operator+(const Matrix &m) const {
         Matrix ret;
         for (int i = 0; i < D; i++) {
