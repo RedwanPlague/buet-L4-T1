@@ -19,7 +19,7 @@ typedef fs::path path;
 
 const int precision = 7;
 
-const path sub_dir = path("4");
+const path sub_dir = path("5");
 const path in_dir = path("test-cases") / sub_dir;
 const path out_dir = path("output") / sub_dir;
 
@@ -137,7 +137,7 @@ void clear_buffer(double **buff, int W) {
 
 // returns if polygon should be drawn
 bool make_fit(int &a, int &b, int l /*inclusive*/, int r /*exclusive*/) {
-    if (a >= r || a < l) { // polygon completely outside of viewing area
+    if (a >= r || b < l) { // polygon completely outside of viewing area
         return false;
     }
     a = (a < l) ? l : ((a < r) ? a : r - 1);
@@ -214,7 +214,7 @@ int main() {
         fs::create_directories(out_dir);
     }
 
-    srand(time(0));
+    /* srand(time(0)); */
 
     clock_t start = clock();
     stage1();

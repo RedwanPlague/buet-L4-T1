@@ -66,7 +66,8 @@ std::pair<bool, Point> intersect_at_y(Point a, Point b, double y) {
     double z = a.z + (a.z - b.z) * coeff;
     Point p(x, y, z);
 
-    bool valid = x + eps > std::min(a.x, b.x) && x < std::max(a.x, b.x) + eps;
+    bool valid = x + eps > std::min(a.x, b.x) && x < std::max(a.x, b.x) + eps && y + eps > std::min(a.y, b.y) &&
+                 y < std::max(a.y, b.y) + eps && z + eps > std::min(a.z, b.z) && z < std::max(a.z, b.z) + eps;
     return std::make_pair(valid, p);
 }
 
