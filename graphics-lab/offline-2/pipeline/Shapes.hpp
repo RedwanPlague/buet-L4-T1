@@ -26,7 +26,19 @@ struct Triangle {
         auto pca = intersect_at_y(c, a, y);
 
         auto A = pca, B = pca;
-        if (pab.first && pbc.first) {
+
+        if (pab.first && pbc.first && pca.first) {
+            if (pab.second == pbc.second) {
+                A = pab, B = pca;
+            }
+            else if (pbc.second == pca.second) {
+                A = pbc, B = pab;
+            }
+            else if (pca.second == pab.second) {
+                A = pca, B = pbc;
+            }
+        }
+        else if (pab.first && pbc.first) {
             A = pab, B = pbc;
         }
         else if (pbc.first && pca.first) {
@@ -40,6 +52,9 @@ struct Triangle {
         }
         else if (pbc.first) {
             A = B = pbc;
+        }
+        else if (pca.first) {
+            A = B = pca;
         }
         else {
             return std::make_pair(Point(1e5, 1e5, 1e5), Point(1e5, 1e5, 1e5));

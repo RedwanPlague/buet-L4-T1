@@ -26,6 +26,10 @@ struct Vector {
     friend Vector operator/(double m, const Vector &v);
     Vector operator-() const { return {-x, -y, -z}; }
 
+    bool operator==(const Vector &v) const {
+        return std::abs(x - v.x) < eps && std::abs(y - v.y) < eps && std::abs(z - v.z) < eps;
+    }
+
     double norm() const { return sqrt(x * x + y * y + z * z); }
 };
 

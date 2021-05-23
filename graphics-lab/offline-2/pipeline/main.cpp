@@ -19,9 +19,9 @@ typedef fs::path path;
 
 const int precision = 7;
 
-const path sub_dir = path("4");
-const path in_dir = path("test-cases") / sub_dir;
-const path out_dir = path("output") / sub_dir;
+const path in_base = path("test-cases");
+const path out_base = path("output");
+path in_dir, out_dir;
 
 Point eye;
 Vector look, up;
@@ -112,20 +112,20 @@ void stage3() {
     fout.close();
 }
 
-double **make_buffer(int W, int H, double mx) {
-    double **buff = new double *[W];
-    for (int i = 0; i < W; i++) {
-        buff[i] = new double[H];
-        fill(buff[i], buff[i] + H, mx + eps);
+double **make_buffer(int H, int W, double mx) {
+    double **buff = new double *[H];
+    for (int i = 0; i < H; i++) {
+        buff[i] = new double[W];
+        fill(buff[i], buff[i] + W, mx + eps);
     }
     return buff;
 }
 
-void write_buffer(double **buff, int W, int H, double mx) {
+void write_buffer(double **buff, int H, int W, double mx) {
     ofstream fout(out_dir / path("z_buffer.txt"));
     fout << setprecision(6) << fixed;
-    for (int j = 0; j < H; j++) {
-        for (int i = 0; i < W; i++) {
+    for (int i = 0; i < H; i++) {
+        for (int j = 0; j < W; j++) {
             if (buff[i][j] < mx + eps) {
                 fout << buff[i][j] << '\t';
             }
@@ -135,8 +135,8 @@ void write_buffer(double **buff, int W, int H, double mx) {
     fout.close();
 }
 
-void clear_buffer(double **buff, int W) {
-    for (int i = 0; i < W; i++) {
+void clear_buffer(double **buff, int H) {
+    for (int i = 0; i < H; i++) {
         delete[] buff[i];
     }
     delete[] buff;
@@ -147,8 +147,8 @@ bool make_fit(int &a, int &b, int l /*inclusive*/, int r /*exclusive*/) {
     if (a >= r || b < l) { // polygon completely outside of viewing area
         return false;
     }
-    a = (a < l) ? l : ((a < r) ? a : r - 1);
-    b = (b < l) ? l : ((b < r) ? b : r - 1);
+    a = clamp(a, l, r - 1);
+    b = clamp(b, l, r - 1);
     return true;
 }
 
@@ -170,8 +170,9 @@ void stage4() {
     double left = l + dx / 2;
     double top = t - dy / 2;
 
+    double **z_buff = make_buffer(screen_height, screen_width, z_rear);
     bitmap_image image(screen_width, screen_height);
-    double **z_buff = make_buffer(screen_width, screen_height, z_rear);
+    image.clear();
 
     ifstream fin(out_dir / path("stage3.txt"));
     Triangle triangle;
@@ -186,7 +187,7 @@ void stage4() {
         }
 
         double ys = top - top_cell * dy;
-        for (int j = top_cell; j <= bottom_cell; j++, ys -= dy) {
+        for (int i = top_cell; i <= bottom_cell; i++, ys -= dy) {
 
             auto cuty = triangle.cut_at_y(ys);
             Point a = cuty.first, b = cuty.second;
@@ -199,12 +200,13 @@ void stage4() {
 
             double coeff = (a.z - b.z) / (a.x - b.x);
             double xs = left + left_cell * dx;
-            for (int i = left_cell; i <= right_cell; i++, xs += dx) {
+            double zs = a.z + (xs - a.x) * coeff;
+            double dz = dx * coeff;
+            for (int j = left_cell; j <= right_cell; j++, zs += dz) {
 
-                double zs = a.z + (xs - a.x) * coeff;
                 if (z_front < zs + eps && zs < z_buff[i][j]) {
                     z_buff[i][j] = zs;
-                    image.set_pixel(i, j, color.r, color.g, color.b);
+                    image.set_pixel(j, i, color.r, color.g, color.b);
                 }
             }
         }
@@ -212,24 +214,35 @@ void stage4() {
     fin.close();
 
     image.save_image(out_dir / path("out.bmp"));
-    write_buffer(z_buff, screen_width, screen_height, z_rear);
-    clear_buffer(z_buff, screen_width);
+    write_buffer(z_buff, screen_height, screen_width, z_rear);
+    clear_buffer(z_buff, screen_height);
 }
 
-int main() {
+void fix_dir(string dir) {
+    path sub_dir = path(dir);
+    in_dir = in_base / sub_dir;
+    out_dir = out_base / sub_dir;
     if (!(fs::is_directory(out_dir) && fs::exists(out_dir))) {
         fs::create_directories(out_dir);
     }
+}
 
+int main() {
     srand(time(0));
 
-    clock_t start = clock();
-    stage1();
-    stage2();
-    stage3();
-    stage4();
-    clock_t end = clock();
-    cout << "time needed: " << 1000.0 * (end - start + 0.0) / CLOCKS_PER_SEC << " ms" << endl;
+    string dirs[] = {"1", "2", "3", "4"};
+
+    for (auto dir : dirs) {
+        fix_dir(dir);
+        clock_t start = clock();
+        stage1();
+        stage2();
+        stage3();
+        stage4();
+        clock_t end = clock();
+        cout << "/" << dir << "/ ";
+        cout << "time needed: " << 1000.0 * (end - start + 0.0) / CLOCKS_PER_SEC << " ms" << endl;
+    }
 
     return 0;
 }
