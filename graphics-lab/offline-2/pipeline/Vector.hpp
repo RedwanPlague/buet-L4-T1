@@ -9,6 +9,7 @@
 
 const double pi = acos(-1);
 const double eps = 1e-7;
+const double inf = 1e5;
 
 struct Vector {
     double x, y, z;
@@ -53,6 +54,8 @@ std::ostream &operator<<(std::ostream &out, const Vector &v) {
 
 typedef Vector Point;
 
+const Point at_inf = Point(inf, inf, inf);
+
 Point rodrigues(Point x, Vector a /*axis (normalized)*/, double angle) {
     angle *= pi / 180;
     double cost = cos(angle);
@@ -63,6 +66,10 @@ Point rodrigues(Point x, Vector a /*axis (normalized)*/, double angle) {
 
 // finds the Point between a and b that has y = y
 std::pair<bool, Point> intersect_at_y(Point a, Point b, double y) {
+    /* if (std::abs(a.y - b.y) < eps) { */
+    /*     return std::make_pair(false, at_inf); */
+    /* } */
+
     double coeff = (y - a.y) / (a.y - b.y);
     double x = a.x + (a.x - b.x) * coeff;
     double z = a.z + (a.z - b.z) * coeff;

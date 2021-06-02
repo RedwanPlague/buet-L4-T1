@@ -47,17 +47,17 @@ struct Triangle {
         else if (pca.first && pab.first) {
             A = pca, B = pab;
         }
-        else if (pab.first) {
-            A = B = pab;
-        }
-        else if (pbc.first) {
-            A = B = pbc;
-        }
-        else if (pca.first) {
-            A = B = pca;
-        }
+        /* else if (pab.first) { */
+        /*     A = B = pab; */
+        /* } */
+        /* else if (pbc.first) { */
+        /*     A = B = pbc; */
+        /* } */
+        /* else if (pca.first) { */
+        /*     A = B = pca; */
+        /* } */
         else {
-            return std::make_pair(Point(1e5, 1e5, 1e5), Point(1e5, 1e5, 1e5));
+            return std::make_pair(at_inf, at_inf);
         }
 
         if (A.second.x > B.second.x) {
