@@ -87,24 +87,22 @@ void capture() {
     image.clear();
 
     Point leftStart = topLeft;
-    for (int j = 0; j < imgHeight; j++, leftStart.y -= dy) {
+    for (int j = 0; j < imgHeight; j++, leftStart -= dy * uv) {
         Point mid = leftStart;
-        for (int i = 0; i < imgWidth; i++, mid.x += dx) {
+        for (int i = 0; i < imgWidth; i++, mid += dx * rv) {
             Ray ray(eye, mid - eye);
             double tmin = inf;
             Object *nearest = nullptr;
-            Color color;
             for (auto o : objects) {
-                double t = o->intersect(ray, color, 0);
+                double t = o->intersect(ray);
                 if (t > 0 && t < tmin) {
                     tmin = t;
                     nearest = o;
                 }
             }
             if (nearest) {
-                nearest->intersect(ray, color, 0);
-                color = color * 255;
-                image.set_pixel(i, j, color.x, color.y, color.z);
+                Color color = nearest->trace(ray, maxDepth) * 255;
+                image.set_pixel(i, j, color.r, color.g, color.b);
             }
         }
     }

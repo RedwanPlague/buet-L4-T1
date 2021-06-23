@@ -1,20 +1,30 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include "Vector.h"
 #include <algorithm>
-#include <cassert>
+#include <istream>
 
-double clamp(double a) { return std::clamp(a, 0.0, 1.0); }
+double clip(double a) { return std::min(a, 1.0); }
 
-struct Color : public Vector {
+struct Color {
+    double r, g, b;
+
     Color() = default;
-    Color(double x, double y, double z) : Vector(x, y, z) {}
+    Color(double r, double g, double b) : r(r), g(g), b(b) {}
 
-    Color operator*(double m) const { return {x * m, y * m, z * m}; }
-    Color operator*(const Color &c) const { return {x * c.x, y * c.y, z * c.z}; }
-    Color operator+(const Color &c) const { return {clamp(x + c.x), clamp(y + c.y), clamp(z + c.z)}; }
-    void operator-(const Color &) const { assert(false); }
+    Color operator+(const Color &c) const { return {clip(r + c.r), clip(g + c.g), clip(b + c.b)}; }
+    Color operator*(const Color &c) const { return {r * c.r, g * c.g, b * c.b}; }
+    Color operator*(double m) const { return {r * m, g * m, b * m}; }
+    Color operator/(double m) const { return {r / m, g / m, b / m}; }
+
+    Color &operator+=(const Color &c) { return *this = *this + c; }
 };
+
+Color operator*(double m, const Color &c) { return {m * c.r, m * c.g, m * c.b}; }
+
+std::istream &operator>>(std::istream &in, Color &c) {
+    in >> c.r >> c.g >> c.b;
+    return in;
+}
 
 #endif // COLOR_H

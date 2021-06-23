@@ -18,7 +18,7 @@ class Floor : public Object {
         shine = 10;
     }
 
-    void draw() {
+    void draw() const {
         double mid = floorWidth / 2;
         for (double x = -mid, start = 0; x < mid; x += tileWidth, start = 1 - start) {
             for (double y = -mid, shade = start; y < mid; y += tileWidth, shade = 1 - shade) {
@@ -38,7 +38,8 @@ class Floor : public Object {
         }
     }
 
-    virtual double intersect(Ray ray, Color &color, int depth) { return -1; };
+    double intersect(Ray ray) const { return -1; }
+    Color trace(Ray ray, int depth) const { return Color(); }
 };
 
 #endif // FLOOR_H

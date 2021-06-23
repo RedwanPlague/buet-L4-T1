@@ -24,6 +24,8 @@ struct Vector {
 
     Vector &operator+=(const Vector &v) { return *this = *this + v; }
     Vector &operator-=(const Vector &v) { return *this = *this - v; }
+    Vector &operator*=(double m) { return *this = *this * m; }
+    Vector &operator/=(double m) { return *this = *this / m; }
 
     bool operator==(const Vector &v) const {
         return std::abs(x - v.x) < eps && std::abs(y - v.y) < eps && std::abs(z - v.z) < eps;
@@ -58,5 +60,7 @@ Vector orthogonalRotate(Vector whom, Vector axis, double angle) {
     Vector direction = cross(axis, whom);
     return whom * cos(angle) + direction * sin(angle);
 }
+
+Vector reflect(Vector v, Vector normal) { return v - 2 * dot(v, normal) * normal; }
 
 #endif // VECTOR_H

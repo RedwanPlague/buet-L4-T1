@@ -23,7 +23,7 @@ const int windowWidth = 600, windowHeight = 600;
 const double viewAngle = 80;
 
 void initialize() {
-    eye = Point(0, 0, 50);
+    eye = Point(0, 0, 250);
     uv = Vector(0, 1, 0);
     lv = Vector(0, 0, -1);
     rv = Vector(1, 0, 0);

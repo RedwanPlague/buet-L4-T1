@@ -13,9 +13,10 @@ class General : public Object {
   public:
     General() = default;
 
-    void draw() {}
+    void draw() const {}
 
-    double intersect(Ray ray, Color &color, int depth) { return -1; }
+    double intersect(Ray ray) const { return -1; }
+    Color trace(Ray ray, int depth) const { return Color(); }
 
     friend std::istream &operator>>(std::istream &in, General &g);
 };

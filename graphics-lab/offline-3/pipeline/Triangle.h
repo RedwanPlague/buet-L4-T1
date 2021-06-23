@@ -12,9 +12,9 @@ class Triangle : public Object {
   public:
     Triangle() = default;
 
-    void draw() {
+    void draw() const {
         glPushMatrix();
-        glColor3f(color.x, color.y, color.z);
+        glColor3f(color.r, color.g, color.b);
         glBegin(GL_TRIANGLES);
         {
             glVertex3f(a.x, a.y, a.z);
@@ -25,7 +25,8 @@ class Triangle : public Object {
         glPopMatrix();
     }
 
-    double intersect(Ray ray, Color &color, int depth) { return -1; }
+    double intersect(Ray ray) const { return -1; }
+    Color trace(Ray ray, int depth) const { return Color(); }
 
     friend std::istream &operator>>(std::istream &in, Triangle &t);
 };

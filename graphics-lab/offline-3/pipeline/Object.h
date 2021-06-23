@@ -2,8 +2,10 @@
 #define OBJECT_H
 
 #include "Color.h"
+#include "Light.h"
 #include "Ray.h"
 #include <istream>
+#include <vector>
 
 struct Coeffs {
     double amb, dif, spc, rfl, rfr;
@@ -24,8 +26,9 @@ class Object {
     Object() = default;
     virtual ~Object() = default;
 
-    virtual void draw() = 0;
-    virtual double intersect(Ray ray, Color &color, int depth) = 0;
+    virtual void draw() const = 0;
+    virtual double intersect(Ray ray) const = 0;
+    virtual Color trace(Ray ray, int depth) const = 0;
 
     friend std::istream &operator>>(std::istream &in, Object &o);
 };
@@ -34,5 +37,8 @@ std::istream &operator>>(std::istream &in, Object &o) {
     in >> o.color >> o.k >> o.shine;
     return in;
 }
+
+extern std::vector<Object *> objects;
+extern std::vector<Light> lights;
 
 #endif // OBJECT_H
