@@ -16,6 +16,8 @@ std::istream &operator>>(std::istream &in, Coeffs &k) {
     return in;
 }
 
+class Object;
+
 class Object {
   protected:
     Color color;
@@ -37,8 +39,5 @@ std::istream &operator>>(std::istream &in, Object &o) {
     in >> o.color >> o.k >> o.shine;
     return in;
 }
-
-extern std::vector<Object *> objects;
-extern std::vector<Light> lights;
 
 #endif // OBJECT_H

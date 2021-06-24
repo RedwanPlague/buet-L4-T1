@@ -3,8 +3,12 @@
 
 #include "Object.h"
 #include <GL/glut.h>
+#include <cassert>
 #include <cmath>
 #include <istream>
+
+extern std::vector<Object *> objects;
+extern std::vector<Light> lights;
 
 class Sphere : public Object {
     Point center;
@@ -91,12 +95,12 @@ class Sphere : public Object {
         Color iColor = color * k.amb;
 
         for (auto l : lights) {
-            Vector toL = l.pos - iPoint;
+            Vector toL = iPoint - l.pos;
             toL /= toL.norm();
-            Vector toR = reflect(-toL, normal);
+            Vector toR = reflect(toL, normal);
 
-            double lambValue = dot(normal, toL);
-            double phongValue = dot(toR, -ray.dir);
+            double lambValue = std::max(0.0, dot(normal, -toL));
+            double phongValue = std::max(0.0, dot(toR, -ray.dir));
 
             iColor += l.color * k.dif * color * lambValue;
             iColor += l.color * k.spc * pow(phongValue, shine);
@@ -106,19 +110,21 @@ class Sphere : public Object {
             return iColor;
 
         Vector rflDir = reflect(ray.dir, normal);
-        Ray rflRay(iPoint + 0.1 * rflDir, rflDir);
+        Ray rflRay(iPoint, rflDir);
 
         double tmin = inf;
         Object *nearest = nullptr;
         for (auto o : objects) {
-            double t = o->intersect(ray);
-            if (t > 0 && t < tmin) {
-                tmin = t;
-                nearest = o;
+            if (o != this) {
+                double t = o->intersect(rflRay);
+                if (t > 0 && t < tmin) {
+                    tmin = t;
+                    nearest = o;
+                }
             }
         }
         if (nearest) {
-            Color rflColor = nearest->trace(ray, depth - 1);
+            Color rflColor = nearest->trace(rflRay, depth - 1);
             iColor += rflColor * k.rfl;
         }
 
