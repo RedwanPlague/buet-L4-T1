@@ -115,7 +115,7 @@ void init() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(80, 1, 1, 1000.0);
+    gluPerspective(80, 1, 0.1, 1000.0);
     // field of view in the Y (vertically)
     // aspect ratio that determines the field of view in the X direction (horizontally)
     // near distance

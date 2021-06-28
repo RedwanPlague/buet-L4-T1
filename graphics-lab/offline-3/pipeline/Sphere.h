@@ -83,10 +83,7 @@ class Sphere : public Object {
         return (R0dotR0 < r2) ? tp + td : tp - td;
     }
 
-    Vector getNormal(Point iPoint) const {
-        Vector normal = iPoint - center;
-        return normal / normal.norm();
-    }
+    Vector getNormal(Ray ray) const { return fixNormal(ray.src - center, ray.dir); }
 
     friend std::istream &operator>>(std::istream &in, Sphere &s);
 };

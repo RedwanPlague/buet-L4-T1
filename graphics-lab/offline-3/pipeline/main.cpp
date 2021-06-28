@@ -93,7 +93,7 @@ void capture() {
         Point mid = leftStart;
         for (int i = 0; i < imgWidth; i++, mid += dx * rv) {
             Ray ray(eye, mid - eye);
-            Object *nearest = getNearest(ray, 0, inf, nullptr);
+            Object *nearest = getNearest(ray, 0, inf);
             if (nearest) {
                 Color color = nearest->trace(ray, maxDepth) * 255;
                 image.set_pixel(i, j, color.r, color.g, color.b);

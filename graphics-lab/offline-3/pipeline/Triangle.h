@@ -27,7 +27,7 @@ class Triangle : public Object {
 
     double intersect(Ray ray) const { return -1; }
 
-    virtual Vector getNormal(Point iPoint) const {
+    Vector getNormal(Ray ray) const {
         Vector normal = cross(b - a, c - a);
         return normal / normal.norm();
     }

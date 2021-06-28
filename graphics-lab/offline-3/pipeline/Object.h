@@ -15,7 +15,7 @@ extern std::vector<Light> lights;
 extern std::vector<Object *> objects;
 extern bool shadowOff, reflectionOff;
 
-Object *getNearest(Ray ray, double nearLimit, double farLimit, Object *ignore);
+Object *getNearest(Ray ray, double nearLimit, double farLimit);
 
 struct Coeffs {
     double amb, dif, spc, rfl, rfr;
@@ -40,14 +40,19 @@ class Object {
 
     virtual void draw() const = 0;
     virtual double intersect(Ray ray) const = 0;
-    virtual Vector getNormal(Point iPoint) const = 0;
+
+    Vector fixNormal(Vector normal, Vector dir) const {
+        normal /= normal.norm();
+        return dot(normal, dir) < 0 ? -normal : normal;
+    }
+    virtual Vector getNormal(Ray ray) const = 0;
 
     virtual Color getColor(Point __unused iPoint) const { return color; }
 
     virtual Color trace(Ray ray, int depth) const {
         double t = intersect(ray);
         Point iPoint = ray.src + t * ray.dir;
-        Vector normal = getNormal(iPoint);
+        Vector normal = getNormal({iPoint, -ray.dir});
 
         Color iColor = color * k.amb;
 
@@ -56,8 +61,8 @@ class Object {
             double lightDistance = fromL.norm();
             fromL /= lightDistance;
 
-            Ray rayToLight = Ray(iPoint, -fromL);
-            Object *nearest = getNearest(rayToLight, 0, lightDistance, (Object *)this);
+            Ray rayToLight = Ray(iPoint - eps * fromL, -fromL);
+            Object *nearest = getNearest(rayToLight, 0, lightDistance);
             if (shadowOff || !nearest) {
                 Vector toR = reflect(fromL, normal);
 
@@ -73,9 +78,9 @@ class Object {
             return iColor;
 
         Vector rflDir = reflect(ray.dir, normal);
-        Ray rflRay(iPoint, rflDir);
+        Ray rflRay(iPoint + eps * rflDir, rflDir);
 
-        Object *nearest = getNearest(rflRay, 0, inf, (Object *)this);
+        Object *nearest = getNearest(rflRay, 0, inf);
         if (nearest) {
             Color rflColor = nearest->trace(rflRay, depth - 1);
             iColor += rflColor * k.rfl;
@@ -92,16 +97,14 @@ std::istream &operator>>(std::istream &in, Object &o) {
     return in;
 }
 
-Object *getNearest(Ray ray, double nearLimit, double farLimit, Object *ignore) {
+Object *getNearest(Ray ray, double nearLimit, double farLimit) {
     double tmin = farLimit;
     Object *nearest = nullptr;
     for (auto o : objects) {
-        if (o != ignore) {
-            double t = o->intersect(ray);
-            if (t > nearLimit && t < tmin) {
-                tmin = t;
-                nearest = o;
-            }
+        double t = o->intersect(ray);
+        if (t > nearLimit && t < tmin) {
+            tmin = t;
+            nearest = o;
         }
     }
     return nearest;
