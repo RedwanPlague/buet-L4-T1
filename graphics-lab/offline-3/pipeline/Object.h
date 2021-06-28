@@ -40,6 +40,8 @@ class Object {
     virtual double intersect(Ray ray) const = 0;
     virtual Vector getNormal(Point iPoint) const = 0;
 
+    virtual Color getColor(Point iPoint) const { return color; }
+
     virtual Color trace(Ray ray, int depth) const {
         double t = intersect(ray);
         Point iPoint = ray.src + t * ray.dir;

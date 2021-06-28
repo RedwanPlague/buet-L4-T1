@@ -9,7 +9,7 @@ double clip(double a) { return std::min(a, 1.0); }
 struct Color {
     double r, g, b;
 
-    Color() = default;
+    Color() : r(0), g(0), b(0) {}
     Color(double r, double g, double b) : r(r), g(g), b(b) {}
 
     Color operator+(const Color &c) const { return {clip(r + c.r), clip(g + c.g), clip(b + c.b)}; }

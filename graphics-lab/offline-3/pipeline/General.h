@@ -15,6 +15,8 @@ class General : public Object {
 
     void draw() const {}
 
+    virtual Vector getNormal(Point iPoint) const { return Vector(); }
+
     double intersect(Ray ray) const { return -1; }
     Color trace(Ray ray, int depth) const { return Color(); }
 

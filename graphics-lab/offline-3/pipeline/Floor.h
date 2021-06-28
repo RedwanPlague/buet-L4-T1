@@ -38,6 +38,9 @@ class Floor : public Object {
         }
     }
 
+    virtual Vector getNormal(Point iPoint) const { return Vector(); }
+    virtual Color getColor(Point iPoint) const { return color; }
+
     double intersect(Ray ray) const { return -1; }
     Color trace(Ray ray, int depth) const { return Color(); }
 };
