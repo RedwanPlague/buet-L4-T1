@@ -22,14 +22,17 @@ double cameraAngleInc, vInc;
 const int windowWidth = 600, windowHeight = 600;
 const double viewAngle = 80;
 
+extern bool shadowOff, reflectionOff;
+
 void initialize() {
-    eye = Point(0, 0, 250);
+    eye = Point(0, 0, 50);
     uv = Vector(0, 1, 0);
     lv = Vector(0, 0, -1);
     rv = Vector(1, 0, 0);
 
     cameraAngleInc = 5;
     vInc = 10;
+    shadowOff = reflectionOff = false;
 }
 
 extern void capture();
@@ -62,6 +65,14 @@ void keyboardListener(unsigned char key, __unused int x, __unused int y) {
         break;
     case 'c': cameraAngleInc = 6 - cameraAngleInc; break;
     case 'v': vInc = 11 - vInc; break;
+    case 's':
+        shadowOff = !shadowOff;
+        capture();
+        break;
+    case 'r':
+        reflectionOff = !reflectionOff;
+        capture();
+        break;
     case '0': capture(); break;
     case 'q': exit(EXIT_SUCCESS); break;
     default: break;

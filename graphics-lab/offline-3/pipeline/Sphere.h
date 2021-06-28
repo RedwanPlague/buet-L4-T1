@@ -7,9 +7,6 @@
 #include <cmath>
 #include <istream>
 
-extern std::vector<Object *> objects;
-extern std::vector<Light> lights;
-
 class Sphere : public Object {
     Point center;
     double radius;
@@ -77,58 +74,19 @@ class Sphere : public Object {
         if (D < 0)
             return -1;
 
-        D = sqrt(D);
+        double sqrtD = sqrt(D);
 
-        double t1 = (-b - D) / (2 * a);
-        double t2 = (-b + D) / (2 * a);
+        double t1 = (-b - sqrtD) / (2 * a);
+        double t2 = (-b + sqrtD) / (2 * a);
         double t = (t1 >= 0) ? t1 : t2;
 
         return t;
     }
 
-    Color trace(Ray ray, int depth) const {
-        double t = intersect(ray);
-        Point iPoint = ray.src + t * ray.dir;
+    Vector getNormal(Point iPoint) const {
         Vector normal = iPoint - center;
         normal /= normal.norm();
-
-        Color iColor = color * k.amb;
-
-        for (auto l : lights) {
-            Vector toL = iPoint - l.pos;
-            toL /= toL.norm();
-            Vector toR = reflect(toL, normal);
-
-            double lambValue = std::max(0.0, dot(normal, -toL));
-            double phongValue = std::max(0.0, dot(toR, -ray.dir));
-
-            iColor += l.color * k.dif * color * lambValue;
-            iColor += l.color * k.spc * pow(phongValue, shine);
-        }
-
-        if (depth <= 1)
-            return iColor;
-
-        Vector rflDir = reflect(ray.dir, normal);
-        Ray rflRay(iPoint, rflDir);
-
-        double tmin = inf;
-        Object *nearest = nullptr;
-        for (auto o : objects) {
-            if (o != this) {
-                double t = o->intersect(rflRay);
-                if (t > 0 && t < tmin) {
-                    tmin = t;
-                    nearest = o;
-                }
-            }
-        }
-        if (nearest) {
-            Color rflColor = nearest->trace(rflRay, depth - 1);
-            iColor += rflColor * k.rfl;
-        }
-
-        return iColor;
+        return normal;
     }
 
     friend std::istream &operator>>(std::istream &in, Sphere &s);
