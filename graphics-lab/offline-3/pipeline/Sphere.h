@@ -66,21 +66,21 @@ class Sphere : public Object {
         Vector R0 = ray.src - center;
         Vector Rd = ray.dir;
 
-        double a = 1;
-        double b = 2 * dot(Rd, R0);
-        double c = dot(R0, R0) - radius * radius;
-        double D = b * b - 4 * a * c;
+        double r2 = radius * radius;
+        double R0dotR0 = dot(R0, R0);
+        double tp = dot(-R0, Rd);
 
-        if (D < 0)
+        if (R0dotR0 > r2 && tp < 0)
             return -1;
 
-        double sqrtD = sqrt(D);
+        double d2 = R0dotR0 - tp * tp;
 
-        double t1 = (-b - sqrtD) / (2 * a);
-        double t2 = (-b + sqrtD) / (2 * a);
-        double t = (t1 >= 0) ? t1 : t2;
+        if (d2 > r2)
+            return -1;
 
-        return t;
+        double td = sqrt(r2 - d2);
+
+        return (R0dotR0 < r2) ? tp + td : tp - td;
     }
 
     Vector getNormal(Point iPoint) const {

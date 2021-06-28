@@ -18,7 +18,6 @@ class General : public Object {
     virtual Vector getNormal(Point iPoint) const { return Vector(); }
 
     double intersect(Ray ray) const { return -1; }
-    Color trace(Ray ray, int depth) const { return Color(); }
 
     friend std::istream &operator>>(std::istream &in, General &g);
 };
