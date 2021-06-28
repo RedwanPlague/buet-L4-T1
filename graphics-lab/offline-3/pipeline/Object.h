@@ -9,6 +9,8 @@
 
 #define __unused __attribute__((unused))
 
+const double ahead = eps;
+
 class Object;
 
 extern std::vector<Light> lights;
@@ -61,7 +63,7 @@ class Object {
             double lightDistance = fromL.norm();
             fromL /= lightDistance;
 
-            Ray rayToLight = Ray(iPoint - eps * fromL, -fromL);
+            Ray rayToLight = Ray(iPoint - ahead * fromL, -fromL);
             Object *nearest = getNearest(rayToLight, 0, lightDistance);
             if (shadowOff || !nearest) {
                 Vector toR = reflect(fromL, normal);
@@ -78,7 +80,7 @@ class Object {
             return iColor;
 
         Vector rflDir = reflect(ray.dir, normal);
-        Ray rflRay(iPoint + eps * rflDir, rflDir);
+        Ray rflRay(iPoint + ahead * rflDir, rflDir);
 
         Object *nearest = getNearest(rflRay, 0, inf);
         if (nearest) {
