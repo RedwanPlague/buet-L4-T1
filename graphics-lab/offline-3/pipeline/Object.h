@@ -7,6 +7,8 @@
 #include <istream>
 #include <vector>
 
+#define __unused __attribute__((unused))
+
 class Object;
 
 extern std::vector<Light> lights;
@@ -40,7 +42,7 @@ class Object {
     virtual double intersect(Ray ray) const = 0;
     virtual Vector getNormal(Point iPoint) const = 0;
 
-    virtual Color getColor(Point iPoint) const { return color; }
+    virtual Color getColor(Point __unused iPoint) const { return color; }
 
     virtual Color trace(Ray ray, int depth) const {
         double t = intersect(ray);

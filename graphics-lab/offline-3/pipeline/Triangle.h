@@ -25,12 +25,12 @@ class Triangle : public Object {
         glPopMatrix();
     }
 
-    virtual Vector getNormal(Point iPoint) const { return Vector(); }
+    virtual Vector getNormal(Point iPoint) const {
+        Vector normal = cross(b - a, c - a);
+        return normal / normal.norm();
+    }
 
-    double intersect(Ray ray) const { return -1; }
-    Color trace(Ray ray, int depth) const { return Color(); }
-
-    virtual Color trace(Ray ray, int depth) const { return Color(); }
+    double intersect(Ray ray) const {}
 
     friend std::istream &operator>>(std::istream &in, Triangle &t);
 };

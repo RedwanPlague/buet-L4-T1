@@ -85,8 +85,7 @@ class Sphere : public Object {
 
     Vector getNormal(Point iPoint) const {
         Vector normal = iPoint - center;
-        normal /= normal.norm();
-        return normal;
+        return normal / normal.norm();
     }
 
     friend std::istream &operator>>(std::istream &in, Sphere &s);
