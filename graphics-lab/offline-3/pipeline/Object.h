@@ -56,7 +56,9 @@ class Object {
         Point iPoint = ray.src + t * ray.dir;
         Vector normal = getNormal({iPoint, -ray.dir});
 
-        Color iColor = color * k.amb;
+        Color iColor = getColor(iPoint);
+
+        Color tColor = iColor * k.amb;
 
         for (auto l : lights) {
             Vector fromL = iPoint - l.pos;
@@ -71,13 +73,13 @@ class Object {
                 double lambValue = std::max(0.0, dot(normal, -fromL));
                 double phongValue = std::max(0.0, dot(toR, -ray.dir));
 
-                iColor += l.color * k.dif * color * lambValue;
-                iColor += l.color * k.spc * pow(phongValue, shine);
+                tColor += l.color * k.dif * iColor * lambValue;
+                tColor += l.color * k.spc * pow(phongValue, shine);
             }
         }
 
         if (depth <= 1 || reflectionOff)
-            return iColor;
+            return tColor;
 
         Vector rflDir = reflect(ray.dir, normal);
         Ray rflRay(iPoint + ahead * rflDir, rflDir);
@@ -85,10 +87,10 @@ class Object {
         Object *nearest = getNearest(rflRay, 0, inf);
         if (nearest) {
             Color rflColor = nearest->trace(rflRay, depth - 1);
-            iColor += rflColor * k.rfl;
+            tColor += rflColor * k.rfl;
         }
 
-        return iColor;
+        return tColor;
     };
 
     friend std::istream &operator>>(std::istream &in, Object &o);

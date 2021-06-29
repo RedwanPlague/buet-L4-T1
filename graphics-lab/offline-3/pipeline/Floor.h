@@ -3,17 +3,20 @@
 
 #include "Object.h"
 #include "Vector.h"
-#include <GL/gl.h>
 #include <GL/glut.h>
 #include <algorithm>
 #include <istream>
 
 class Floor : public Object {
-    double floorWidth, tileWidth;
+    double floorWidth, tileWidth, mid;
 
   public:
     Floor(double fw, double tw) : floorWidth(fw), tileWidth(tw) {
-        k.amb = k.dif = k.spc = k.rfl = 1;
+        mid = floorWidth / 2;
+        k.amb = 0.4;
+        k.dif = 0.4;
+        k.spc = 0.3;
+        k.rfl = 0.7;
         k.rfr = 0;
         shine = 10;
     }
@@ -38,10 +41,24 @@ class Floor : public Object {
         }
     }
 
-    virtual Vector getNormal(Point iPoint) const { return Vector(); }
-    virtual Color getColor(Point iPoint) const { return color; }
+    Vector getNormal(Ray ray) const {
+        Vector normal(0, 0, 1);
+        return fixNormal(normal, ray);
+    }
+    Color getColor(Point iPoint) const {
+        int i = (iPoint.x + mid) / tileWidth;
+        int j = (iPoint.y + mid) / tileWidth;
+        return ((i + j) & 1) ? Color(1, 1, 1) : Color(0, 0, 0);
+    }
 
-    double intersect(Ray ray) const { return -1; }
+    double intersect(Ray ray) const {
+        Point &R0 = ray.src, &Rd = ray.dir;
+        double t = (Rd.z == 0) ? 0 : -R0.z / Rd.z;
+        double x = R0.x + t * Rd.x;
+        double y = R0.y + t * Rd.y;
+
+        return (-mid < x && x < mid && -mid < y && y < mid) ? t : -1;
+    }
 };
 
 #endif // FLOOR_H

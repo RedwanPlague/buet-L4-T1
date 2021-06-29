@@ -12,6 +12,7 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -37,7 +38,7 @@ void loadData() {
     fin >> maxDepth >> imgWidth;
     imgHeight = imgWidth;
 
-    /* objects.push_back(new Floor(1000, 20)); */
+    objects.push_back(new Floor(1000, 20));
 
     int no;
     fin >> no;
@@ -79,6 +80,8 @@ void unloadData() {
 }
 
 void capture() {
+    clock_t stime = clock();
+
     double planeDist = (windowHeight / 2.0) / tan(pi / 180 * viewAngle / 2.0);
     double dx = (double)windowWidth / imgWidth;
     double dy = (double)windowHeight / imgHeight;
@@ -102,6 +105,9 @@ void capture() {
     }
 
     image.save_image(dir / path("out.bmp"));
+
+    clock_t etime = clock();
+    cout << (etime - stime + 0.0) / CLOCKS_PER_SEC << endl;
 }
 
 int main(int argc, char **argv) {
