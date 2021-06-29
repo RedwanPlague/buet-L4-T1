@@ -13,7 +13,7 @@ struct Light {
     Light() = default;
 
     void draw() const {
-        const double a = 0.1, x = pos.x, y = pos.y, z = pos.z;
+        const double a = 0.5, x = pos.x, y = pos.y, z = pos.z;
         glPushMatrix();
         glColor3f(color.r, color.g, color.b);
         glBegin(GL_QUADS);

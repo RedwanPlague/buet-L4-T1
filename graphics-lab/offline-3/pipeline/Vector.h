@@ -40,6 +40,7 @@ double dot(const Vector &a, const Vector &b) { return a.x * b.x + a.y * b.y + a.
 Vector cross(const Vector &a, const Vector &b) {
     return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
+double determinant(Vector a, Vector b, Vector c) { return dot(a, cross(b, c)); }
 
 std::istream &operator>>(std::istream &in, Vector &v) {
     in >> v.x >> v.y >> v.z;
