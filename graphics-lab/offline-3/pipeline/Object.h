@@ -43,9 +43,9 @@ class Object {
     virtual void draw() const = 0;
     virtual double intersect(Ray ray) const = 0;
 
-    Vector fixNormal(Vector normal, Vector dir) const {
+    Vector fixNormal(Vector normal, Ray ray) const {
         normal /= normal.norm();
-        return dot(normal, dir) < 0 ? -normal : normal;
+        return dot(normal, ray.dir) < 0 ? -normal : normal;
     }
     virtual Vector getNormal(Ray ray) const = 0;
 
