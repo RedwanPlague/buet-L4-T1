@@ -13,6 +13,7 @@ class Sphere : public Object {
 
   public:
     Sphere() = default;
+    Sphere(Point c, double r) : center(c), radius(r) {}
 
     void draw() const {
         const int slices = 50, stacks = 30;

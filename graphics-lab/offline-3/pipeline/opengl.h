@@ -13,6 +13,7 @@
 #define __unused __attribute__((unused))
 
 extern std::vector<Object *> objects;
+extern std::vector<Light> lights;
 
 Point eye;         // camera position
 Vector uv, lv, rv; // up vector, look vector, right vector
@@ -103,6 +104,9 @@ void display() {
 
     for (auto o : objects) {
         o->draw();
+    }
+    for (auto l : lights) {
+        l.draw();
     }
 
     glutSwapBuffers();
