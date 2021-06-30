@@ -62,6 +62,14 @@ Vector orthogonalRotate(Vector whom, Vector axis, double angle) {
     return whom * cos(angle) + direction * sin(angle);
 }
 
-Vector reflect(Vector v, Vector normal) { return v - 2 * dot(v, normal) * normal; }
+Vector reflect(Vector I, Vector N) { return I - 2 * dot(I, N) * N; }
+
+Vector refract(Vector I, Vector N, double eta) {
+    double cosi = dot(N, I);
+    float k = 1 - eta * eta * (1 - cosi * cosi); // k = (cos(r))^2
+    if (k < 0)
+        return reflect(I, N); // total internal reflection
+    return eta * I - (eta * cosi + sqrt(k)) * N;
+}
 
 #endif // VECTOR_H

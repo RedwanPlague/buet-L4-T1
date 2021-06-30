@@ -7,8 +7,6 @@
 #include <cmath>
 #include <istream>
 
-bool isZero(double d) { return std::abs(d) < eps; }
-
 class General : public Object {
     double A, B, C, D, E, F, G, H, I, J;
     double length, width, height;

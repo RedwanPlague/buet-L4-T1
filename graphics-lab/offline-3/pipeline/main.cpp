@@ -107,7 +107,7 @@ void capture() {
     image.save_image(dir / path("out.bmp"));
 
     clock_t etime = clock();
-    cout << (etime - stime + 0.0) / CLOCKS_PER_SEC << endl;
+    cout << fixed << setprecision(2) << (etime - stime + 0.0) / CLOCKS_PER_SEC << " s" << endl;
 }
 
 int main(int argc, char **argv) {

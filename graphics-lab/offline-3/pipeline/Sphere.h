@@ -9,11 +9,10 @@
 
 class Sphere : public Object {
     Point center;
-    double radius;
+    double radius, r2, invKrfr;
 
   public:
     Sphere() = default;
-    Sphere(Point c, double r) : center(c), radius(r) {}
 
     void draw() const {
         const int slices = 50, stacks = 30;
@@ -67,7 +66,6 @@ class Sphere : public Object {
         Vector R0 = ray.src - center;
         Vector Rd = ray.dir;
 
-        double r2 = radius * radius;
         double R0dotR0 = dot(R0, R0);
         double tp = dot(-R0, Rd);
 
@@ -86,11 +84,18 @@ class Sphere : public Object {
 
     Vector getNormal(Ray ray) const { return fixNormal(ray.src - center, ray); }
 
+    double getKrfr(Point iPoint) const {
+        Vector d = iPoint - center;
+        return (dot(d, d) > r2) ? k.rfr : invKrfr;
+    }
+
     friend std::istream &operator>>(std::istream &in, Sphere &s);
 };
 
 std::istream &operator>>(std::istream &in, Sphere &s) {
     in >> s.center >> s.radius >> (Object &)s;
+    s.r2 = s.radius * s.radius;
+    s.invKrfr = isZero(s.k.rfr) ? 0 : 1 / s.k.rfr;
     return in;
 }
 

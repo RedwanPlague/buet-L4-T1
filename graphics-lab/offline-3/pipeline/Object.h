@@ -17,14 +17,16 @@ extern std::vector<Light> lights;
 extern std::vector<Object *> objects;
 extern bool shadowOff, reflectionOff;
 
+bool isZero(double d) { return std::abs(d) < eps; }
 Object *getNearest(Ray ray, double nearLimit, double farLimit);
 
 struct Coeffs {
     double amb, dif, spc, rfl, rfr;
 };
 std::istream &operator>>(std::istream &in, Coeffs &k) {
-    in >> k.amb >> k.dif >> k.spc >> k.rfl;
-    k.rfr = k.rfl / 2;
+    in >> k.amb >> k.dif >> k.spc >> k.rfl >> k.rfr;
+    /* in >> k.amb >> k.dif >> k.spc >> k.rfl; */
+    /* k.rfr = 0.3; */
     return in;
 }
 
@@ -50,6 +52,7 @@ class Object {
     virtual Vector getNormal(Ray ray) const = 0;
 
     virtual Color getColor(Point __unused iPoint) const { return color; }
+    virtual double getKrfr(Point __unused iPoint) const { return k.rfr; }
 
     virtual Color trace(Ray ray, int depth) const {
         double t = intersect(ray);
@@ -88,6 +91,19 @@ class Object {
         if (nearest) {
             Color rflColor = nearest->trace(rflRay, depth - 1);
             tColor += rflColor * k.rfl;
+        }
+
+        double iKrfr = getKrfr(ray.src);
+        if (isZero(iKrfr))
+            return tColor;
+
+        Vector rfrDir = refract(ray.dir, normal, iKrfr);
+        Ray rfrRay(iPoint + ahead * rfrDir, rfrDir);
+
+        nearest = getNearest(rfrRay, 0, inf);
+        if (nearest) {
+            Color rfrColor = nearest->trace(rfrRay, depth - 1);
+            tColor += rfrColor;
         }
 
         return tColor;
