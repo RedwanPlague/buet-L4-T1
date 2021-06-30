@@ -22,7 +22,6 @@ class Floor : public Object {
     }
 
     void draw() const {
-        double mid = floorWidth / 2;
         for (double x = -mid, start = 0; x < mid; x += tileWidth, start = 1 - start) {
             for (double y = -mid, shade = start; y < mid; y += tileWidth, shade = 1 - shade) {
                 glColor3f(shade, shade, shade);

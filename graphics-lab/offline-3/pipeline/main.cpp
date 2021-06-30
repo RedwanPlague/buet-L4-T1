@@ -27,7 +27,7 @@ int maxDepth;
 vector<Object *> objects;
 vector<Light> lights;
 
-bool shadowOff, reflectionOff;
+bool shadowOn, reflectionOn, refractionOn;
 
 int imgWidth, imgHeight;
 const path dir("io-files");
@@ -98,7 +98,7 @@ void capture() {
         Point mid = leftStart;
         for (int i = 0; i < imgWidth; i++, mid += dx * rv) {
             Ray ray(eye, mid - eye);
-            Object *nearest = getNearest(ray, 0, inf);
+            Object *nearest = getNearest(ray);
             if (nearest) {
                 Color color = nearest->trace(ray, maxDepth).transform();
                 image.set_pixel(i, j, color.r, color.g, color.b);

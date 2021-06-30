@@ -8,6 +8,7 @@
 
 class Triangle : public Object {
     Point a, b, c;
+    Vector n;
 
   public:
     Triangle() = default;
@@ -46,16 +47,14 @@ class Triangle : public Object {
         return t;
     }
 
-    Vector getNormal(Ray ray) const {
-        Vector normal = cross(b - a, c - a);
-        return fixNormal(normal, ray);
-    }
+    Vector getNormal(Ray ray) const { return fixNormal(n, ray); }
 
     friend std::istream &operator>>(std::istream &in, Triangle &t);
 };
 
 std::istream &operator>>(std::istream &in, Triangle &t) {
     in >> t.a >> t.b >> t.c >> (Object &)t;
+    t.n = cross(t.b - t.a, t.c - t.a);
     return in;
 }
 

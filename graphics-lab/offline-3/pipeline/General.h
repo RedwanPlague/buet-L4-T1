@@ -9,8 +9,8 @@
 
 class General : public Object {
     double A, B, C, D, E, F, G, H, I, J;
-    double length, width, height;
-    Point ref;
+    bool clipX, clipY, clipZ;
+    Point ref1, ref2;
 
   public:
     General() = default;
@@ -25,13 +25,13 @@ class General : public Object {
     }
 
     bool fits(Point iPoint) const {
-        return (isZero(length) || (ref.x <= iPoint.x && iPoint.x <= ref.x + length)) &&
-               (isZero(width) || (ref.y <= iPoint.y && iPoint.y <= ref.y + width)) &&
-               (isZero(height) || (ref.z <= iPoint.z && iPoint.z <= ref.z + height));
+        return (clipX || (ref1.x <= iPoint.x && iPoint.x <= ref2.x)) &&
+               (clipY || (ref1.y <= iPoint.y && iPoint.y <= ref2.y)) &&
+               (clipZ || (ref1.z <= iPoint.z && iPoint.z <= ref2.z));
     }
 
     double intersect(Ray ray) const {
-        Vector R0 = ray.src, Rd = ray.dir;
+        Vector &R0 = ray.src, &Rd = ray.dir;
         double a = (A * Rd.x * Rd.x) + (B * Rd.y * Rd.y) + (C * Rd.z * Rd.z) + (D * Rd.x * Rd.y) +
                    (E * Rd.x * Rd.z) + (F * Rd.y * Rd.z);
         double b = (2 * A * Rd.x * R0.x) + (2 * B * Rd.y * R0.y) + (2 * C * Rd.z * R0.z) +
@@ -66,8 +66,13 @@ class General : public Object {
 
 std::istream &operator>>(std::istream &in, General &g) {
     in >> g.A >> g.B >> g.C >> g.D >> g.E >> g.F >> g.G >> g.H >> g.I >> g.J;
-    in >> g.ref >> g.length >> g.width >> g.height;
+    Point lim;
+    in >> g.ref1 >> lim;
     in >> (Object &)g;
+    g.ref2 = g.ref1 + lim;
+    g.clipX = isZero(lim.x);
+    g.clipY = isZero(lim.y);
+    g.clipZ = isZero(lim.z);
     return in;
 }
 

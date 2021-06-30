@@ -15,10 +15,10 @@ class Object;
 
 extern std::vector<Light> lights;
 extern std::vector<Object *> objects;
-extern bool shadowOff, reflectionOff;
+extern bool shadowOn, reflectionOn, refractionOn;
 
 bool isZero(double d) { return std::abs(d) < eps; }
-Object *getNearest(Ray ray, double nearLimit, double farLimit);
+Object *getNearest(Ray ray, double nearLimit = 0, double farLimit = inf, bool shadow = false);
 
 struct Coeffs {
     double amb, dif, spc, rfl, rfr;
@@ -69,8 +69,11 @@ class Object {
             fromL /= lightDistance;
 
             Ray rayToLight = Ray(iPoint - ahead * fromL, -fromL);
-            Object *nearest = getNearest(rayToLight, 0, lightDistance);
-            if (shadowOff || !nearest) {
+            Object *nearest = nullptr;
+            if (shadowOn) {
+                nearest = getNearest(rayToLight, 0, lightDistance, true);
+            }
+            if (!nearest) {
                 Vector toR = reflect(fromL, normal);
 
                 double lambValue = std::max(0.0, dot(normal, -fromL));
@@ -81,29 +84,33 @@ class Object {
             }
         }
 
-        if (depth <= 1 || reflectionOff)
+        if (depth <= 1)
             return tColor;
 
-        Vector rflDir = reflect(ray.dir, normal);
-        Ray rflRay(iPoint + ahead * rflDir, rflDir);
+        if (reflectionOn) {
+            Vector rflDir = reflect(ray.dir, normal);
+            Ray rflRay(iPoint + ahead * rflDir, rflDir);
 
-        Object *nearest = getNearest(rflRay, 0, inf);
-        if (nearest) {
-            Color rflColor = nearest->trace(rflRay, depth - 1);
-            tColor += rflColor * k.rfl;
+            Object *nearest = getNearest(rflRay);
+            if (nearest) {
+                Color rflColor = nearest->trace(rflRay, depth - 1);
+                tColor += rflColor * k.rfl;
+            }
         }
 
-        double iKrfr = getKrfr(ray.src);
-        if (isZero(iKrfr))
-            return tColor;
+        if (refractionOn) {
+            double iKrfr = getKrfr(ray.src);
+            if (isZero(iKrfr))
+                return tColor;
 
-        Vector rfrDir = refract(ray.dir, normal, iKrfr);
-        Ray rfrRay(iPoint + ahead * rfrDir, rfrDir);
+            Vector rfrDir = refract(ray.dir, normal, iKrfr);
+            Ray rfrRay(iPoint + ahead * rfrDir, rfrDir);
 
-        nearest = getNearest(rfrRay, 0, inf);
-        if (nearest) {
-            Color rfrColor = nearest->trace(rfrRay, depth - 1);
-            tColor += rfrColor;
+            Object *nearest = getNearest(rfrRay);
+            if (nearest) {
+                Color rfrColor = nearest->trace(rfrRay, depth - 1);
+                tColor += rfrColor;
+            }
         }
 
         return tColor;
@@ -117,12 +124,14 @@ std::istream &operator>>(std::istream &in, Object &o) {
     return in;
 }
 
-Object *getNearest(Ray ray, double nearLimit, double farLimit) {
+Object *getNearest(Ray ray, double nearLimit, double farLimit, bool shadow) {
     double tmin = farLimit;
     Object *nearest = nullptr;
     for (auto o : objects) {
         double t = o->intersect(ray);
         if (t > nearLimit && t < tmin) {
+            if (shadow)
+                return o;
             tmin = t;
             nearest = o;
         }
