@@ -80,6 +80,8 @@ void unloadData() {
 }
 
 void capture() {
+    cout << "generating image: ";
+    cout.flush();
     clock_t stime = clock();
 
     double planeDist = (windowHeight / 2.0) / tan(pi / 180 * viewAngle / 2.0);
@@ -98,7 +100,7 @@ void capture() {
             Ray ray(eye, mid - eye);
             Object *nearest = getNearest(ray, 0, inf);
             if (nearest) {
-                Color color = nearest->trace(ray, maxDepth) * 255;
+                Color color = nearest->trace(ray, maxDepth).transform();
                 image.set_pixel(i, j, color.r, color.g, color.b);
             }
         }
@@ -107,7 +109,7 @@ void capture() {
     image.save_image(dir / path("out.bmp"));
 
     clock_t etime = clock();
-    cout << fixed << setprecision(2) << (etime - stime + 0.0) / CLOCKS_PER_SEC << " s" << endl;
+    cout << fixed << setprecision(2) << (etime - stime + 0.0) / CLOCKS_PER_SEC << "s taken" << endl;
 }
 
 int main(int argc, char **argv) {
