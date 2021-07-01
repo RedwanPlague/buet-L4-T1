@@ -24,9 +24,9 @@ struct Coeffs {
     double amb, dif, spc, rfl, rfr;
 };
 std::istream &operator>>(std::istream &in, Coeffs &k) {
-    in >> k.amb >> k.dif >> k.spc >> k.rfl >> k.rfr;
-    /* in >> k.amb >> k.dif >> k.spc >> k.rfl; */
-    /* k.rfr = 0.3; */
+    /* in >> k.amb >> k.dif >> k.spc >> k.rfl >> k.rfr; */
+    in >> k.amb >> k.dif >> k.spc >> k.rfl;
+    k.rfr = 0.0;
     return in;
 }
 
