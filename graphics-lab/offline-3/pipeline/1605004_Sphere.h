@@ -1,7 +1,7 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "Object.h"
+#include "1605004_Object.h"
 #include <GL/glut.h>
 #include <cassert>
 #include <cmath>

@@ -1,8 +1,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "Color.h"
-#include "Vector.h"
+#include "1605004_Color.h"
+#include "1605004_Vector.h"
 #include <GL/glut.h>
 #include <istream>
 

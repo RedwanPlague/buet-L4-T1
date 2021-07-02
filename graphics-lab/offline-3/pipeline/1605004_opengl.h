@@ -1,9 +1,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "Light.h"
-#include "Object.h"
-#include "Vector.h"
+#include "1605004_Light.h"
+#include "1605004_Object.h"
+#include "1605004_Vector.h"
 
 #include <GL/glut.h>
 #include <cstdlib>
@@ -23,7 +23,7 @@ double cameraAngleInc, vInc;
 const int windowWidth = 600, windowHeight = 600;
 const double viewAngle = 80;
 
-extern bool shadowOn, reflectionOn, refractionOn;
+extern bool shadowOn, reflectionOn, refractionOn, textureOn;
 
 void initialize() {
     eye = Point(0, 0, 200);
@@ -34,6 +34,7 @@ void initialize() {
     cameraAngleInc = 5;
     vInc = 10;
     shadowOn = reflectionOn = refractionOn = true;
+    textureOn = false;
 }
 
 extern void capture();
@@ -76,6 +77,10 @@ void keyboardListener(unsigned char key, __unused int x, __unused int y) {
         break;
     case 'f':
         refractionOn = !refractionOn;
+        capture();
+        break;
+    case 't':
+        textureOn = !textureOn;
         capture();
         break;
     case '0': capture(); break;

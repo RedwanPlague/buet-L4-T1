@@ -1,13 +1,13 @@
-#include "Floor.h"
-#include "General.h"
-#include "Light.h"
-#include "Ray.h"
-#include "Sphere.h"
-#include "Triangle.h"
-#include "Vector.h"
-#include "opengl.h"
+#include "1605004_Floor.h"
+#include "1605004_General.h"
+#include "1605004_Light.h"
+#include "1605004_Ray.h"
+#include "1605004_Sphere.h"
+#include "1605004_Triangle.h"
+#include "1605004_Vector.h"
+#include "1605004_opengl.h"
 
-#include "bitmap_image.hpp"
+#include "1605004_bitmap_image.hpp"
 
 #include <GL/glut.h>
 #include <cmath>
@@ -27,7 +27,7 @@ int maxDepth;
 vector<Object *> objects;
 vector<Light> lights;
 
-bool shadowOn, reflectionOn, refractionOn;
+bool shadowOn, reflectionOn, refractionOn, textureOn;
 
 int imgWidth, imgHeight;
 const path dir("io-files");
@@ -38,7 +38,7 @@ void loadData() {
     fin >> maxDepth >> imgWidth;
     imgHeight = imgWidth;
 
-    objects.push_back(new Floor(1000, 20));
+    objects.push_back(new Floor(1000, 20, dir / path("1605004.bmp")));
 
     int no;
     fin >> no;

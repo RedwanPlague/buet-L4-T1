@@ -1,9 +1,9 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "Color.h"
-#include "Light.h"
-#include "Ray.h"
+#include "1605004_Color.h"
+#include "1605004_Light.h"
+#include "1605004_Ray.h"
 #include <istream>
 #include <vector>
 

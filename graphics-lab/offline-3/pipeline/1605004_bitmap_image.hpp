@@ -41,20 +41,20 @@ class bitmap_image {
           channel_mode_(bgr_mode) {}
 
     bitmap_image(const std::string &filename)
-        : file_name_(filename), data_(0), length_(0), width_(0), height_(0), row_increment_(0), bytes_per_pixel_(0),
-          channel_mode_(bgr_mode) {
+        : file_name_(filename), data_(0), length_(0), width_(0), height_(0), row_increment_(0),
+          bytes_per_pixel_(0), channel_mode_(bgr_mode) {
         load_bitmap();
     }
 
     bitmap_image(const unsigned int width, const unsigned int height)
-        : file_name_(""), data_(0), length_(0), width_(width), height_(height), row_increment_(0), bytes_per_pixel_(3),
-          channel_mode_(bgr_mode) {
+        : file_name_(""), data_(0), length_(0), width_(width), height_(height), row_increment_(0),
+          bytes_per_pixel_(3), channel_mode_(bgr_mode) {
         create_bitmap();
     }
 
     bitmap_image(const bitmap_image &image)
-        : file_name_(image.file_name_), data_(0), width_(image.width_), height_(image.height_), row_increment_(0),
-          bytes_per_pixel_(3), channel_mode_(bgr_mode) {
+        : file_name_(image.file_name_), data_(0), width_(image.width_), height_(image.height_),
+          row_increment_(0), bytes_per_pixel_(3), channel_mode_(bgr_mode) {
         create_bitmap();
         std::copy(image.data_, image.data_ + image.length_, data_);
     }
@@ -108,8 +108,8 @@ class bitmap_image {
 
     inline unsigned char *row(unsigned int row_index) const { return data_ + (row_index * row_increment_); }
 
-    inline void get_pixel(const unsigned int x, const unsigned int y, unsigned char &red, unsigned char &green,
-                          unsigned char &blue) {
+    inline void get_pixel(const unsigned int x, const unsigned int y, unsigned char &red,
+                          unsigned char &green, unsigned char &blue) const {
         const unsigned int y_offset = y * row_increment_;
         const unsigned int x_offset = x * bytes_per_pixel_;
         blue = data_[y_offset + x_offset + 0];
@@ -263,7 +263,8 @@ class bitmap_image {
 
     inline unsigned int pixel_count() const { return width_ * height_; }
 
-    inline void setwidth_height(const unsigned int width, const unsigned int height, const bool clear = false) {
+    inline void setwidth_height(const unsigned int width, const unsigned int height,
+                                const bool clear = false) {
         delete[] data_;
         data_ = 0;
         width_ = width;
@@ -280,8 +281,8 @@ class bitmap_image {
         std::ofstream stream(file_name.c_str(), std::ios::binary);
 
         if (!stream) {
-            std::cout << "bitmap_image::save_image(): Error - Could not open file " << file_name << " for writing!"
-                      << std::endl;
+            std::cout << "bitmap_image::save_image(): Error - Could not open file " << file_name
+                      << " for writing!" << std::endl;
             return;
         }
 
@@ -314,7 +315,8 @@ class bitmap_image {
 
         for (unsigned int i = 0; i < height_; ++i) {
             unsigned char *data_ptr = data_ + (row_increment_ * (height_ - i - 1));
-            stream.write(reinterpret_cast<char *>(data_ptr), sizeof(unsigned char) * bytes_per_pixel_ * width_);
+            stream.write(reinterpret_cast<char *>(data_ptr),
+                         sizeof(unsigned char) * bytes_per_pixel_ * width_);
             stream.write(padding_data, padding);
         }
 
@@ -469,7 +471,8 @@ class bitmap_image {
     }
 
     inline void export_color_plane(const color_plane color, unsigned char *image) {
-        for (unsigned char *itr = (data_ + offset(color)); itr < (data_ + length_); ++image, itr += bytes_per_pixel_) {
+        for (unsigned char *itr = (data_ + offset(color)); itr < (data_ + length_);
+             ++image, itr += bytes_per_pixel_) {
             (*image) = (*itr);
         }
     }
@@ -501,8 +504,8 @@ class bitmap_image {
 
     inline void export_gray_scale_response_image(double *response_image) {
         for (unsigned char *itr = data_; itr < (data_ + length_); itr += bytes_per_pixel_) {
-            unsigned char gray_value =
-                static_cast<unsigned char>((0.299 * (*(itr + 2))) + (0.587 * (*(itr + 1))) + (0.114 * (*(itr + 0))));
+            unsigned char gray_value = static_cast<unsigned char>(
+                (0.299 * (*(itr + 2))) + (0.587 * (*(itr + 1))) + (0.114 * (*(itr + 0))));
             (*response_image) = (1.0 * gray_value) / 256.0;
         }
     }
@@ -549,9 +552,12 @@ class bitmap_image {
             double green = (1.0 * (*(itr++)));
             double red = (1.0 * (*(itr++)));
 
-            (*y) = clamp<double>(16.0 + (1.0 / 256.0) * (65.738 * red + 129.057 * green + 25.064 * blue), 1.0, 254);
-            (*cb) = clamp<double>(128.0 + (1.0 / 256.0) * (-37.945 * red - 74.494 * green + 112.439 * blue), 1.0, 254);
-            (*cr) = clamp<double>(128.0 + (1.0 / 256.0) * (112.439 * red - 94.154 * green - 18.285 * blue), 1.0, 254);
+            (*y) = clamp<double>(16.0 + (1.0 / 256.0) * (65.738 * red + 129.057 * green + 25.064 * blue), 1.0,
+                                 254);
+            (*cb) = clamp<double>(128.0 + (1.0 / 256.0) * (-37.945 * red - 74.494 * green + 112.439 * blue),
+                                  1.0, 254);
+            (*cr) = clamp<double>(128.0 + (1.0 / 256.0) * (112.439 * red - 94.154 * green - 18.285 * blue),
+                                  1.0, 254);
         }
     }
 
@@ -619,10 +625,12 @@ class bitmap_image {
             double cb_ = (*cb);
             double cr_ = (*cr);
 
-            *(itr++) = static_cast<unsigned char>(clamp((298.082 * y_ + 516.412 * cb_) / 256.0 - 276.836, 0.0, 255.0));
+            *(itr++) = static_cast<unsigned char>(
+                clamp((298.082 * y_ + 516.412 * cb_) / 256.0 - 276.836, 0.0, 255.0));
             *(itr++) = static_cast<unsigned char>(
                 clamp((298.082 * y_ - 100.291 * cb_ - 208.120 * cr_) / 256.0 + 135.576, 0.0, 255.0));
-            *(itr++) = static_cast<unsigned char>(clamp((298.082 * y_ + 408.583 * cr_) / 256.0 - 222.921, 0.0, 255.0));
+            *(itr++) = static_cast<unsigned char>(
+                clamp((298.082 * y_ + 408.583 * cr_) / 256.0 - 222.921, 0.0, 255.0));
         }
     }
 
@@ -991,8 +999,8 @@ class bitmap_image {
 
         unsigned int struct_size() {
             return sizeof(size) + sizeof(width) + sizeof(height) + sizeof(planes) + sizeof(bit_count) +
-                   sizeof(compression) + sizeof(size_image) + sizeof(x_pels_per_meter) + sizeof(y_pels_per_meter) +
-                   sizeof(clr_used) + sizeof(clr_important);
+                   sizeof(compression) + sizeof(size_image) + sizeof(x_pels_per_meter) +
+                   sizeof(y_pels_per_meter) + sizeof(clr_used) + sizeof(clr_important);
         }
     };
 
@@ -1122,8 +1130,8 @@ class bitmap_image {
         std::ifstream stream(file_name_.c_str(), std::ios::binary);
 
         if (!stream) {
-            std::cerr << "bitmap_image::load_bitmap() ERROR: bitmap_image - file " << file_name_ << " not found!"
-                      << std::endl;
+            std::cerr << "bitmap_image::load_bitmap() ERROR: bitmap_image - file " << file_name_
+                      << " not found!" << std::endl;
             return;
         }
 
@@ -1142,8 +1150,8 @@ class bitmap_image {
 
         if (bih.bit_count != 24) {
             stream.close();
-            std::cerr << "bitmap_image::load_bitmap() ERROR: bitmap_image - Invalid bit depth " << bih.bit_count
-                      << " expected 24." << std::endl;
+            std::cerr << "bitmap_image::load_bitmap() ERROR: bitmap_image - Invalid bit depth "
+                      << bih.bit_count << " expected 24." << std::endl;
 
             return;
         }
@@ -1203,8 +1211,8 @@ struct rgb_store {
     unsigned char blue;
 };
 
-inline void rgb_to_ycbcr(const unsigned int &length, double *red, double *green, double *blue, double *y, double *cb,
-                         double *cr) {
+inline void rgb_to_ycbcr(const unsigned int &length, double *red, double *green, double *blue, double *y,
+                         double *cb, double *cr) {
     unsigned int i = 0;
 
     while (i < length) {
@@ -1222,8 +1230,8 @@ inline void rgb_to_ycbcr(const unsigned int &length, double *red, double *green,
     }
 }
 
-inline void ycbcr_to_rgb(const unsigned int &length, double *y, double *cb, double *cr, double *red, double *green,
-                         double *blue) {
+inline void ycbcr_to_rgb(const unsigned int &length, double *y, double *cb, double *cr, double *red,
+                         double *green, double *blue) {
     unsigned int i = 0;
 
     while (i < length) {
@@ -1245,8 +1253,8 @@ inline void ycbcr_to_rgb(const unsigned int &length, double *y, double *cb, doub
     }
 }
 
-inline void subsample(const unsigned int &width, const unsigned int &height, const double *source, unsigned int &w,
-                      unsigned int &h, double **dest) {
+inline void subsample(const unsigned int &width, const unsigned int &height, const double *source,
+                      unsigned int &w, unsigned int &h, double **dest) {
     /*  Single channel.  */
 
     w = 0;
@@ -1311,8 +1319,8 @@ inline void subsample(const unsigned int &width, const unsigned int &height, con
     }
 }
 
-inline void upsample(const unsigned int &width, const unsigned int &height, const double *source, unsigned int &w,
-                     unsigned int &h, double **dest) {
+inline void upsample(const unsigned int &width, const unsigned int &height, const double *source,
+                     unsigned int &w, unsigned int &h, double **dest) {
     /* Single channel. */
 
     w = 2 * width;
@@ -1337,8 +1345,9 @@ inline void upsample(const unsigned int &width, const unsigned int &height, cons
     }
 }
 
-inline void checkered_pattern(const unsigned int x_width, const unsigned int y_width, const unsigned char value,
-                              const bitmap_image::color_plane color, bitmap_image &image) {
+inline void checkered_pattern(const unsigned int x_width, const unsigned int y_width,
+                              const unsigned char value, const bitmap_image::color_plane color,
+                              bitmap_image &image) {
     if ((x_width >= image.width()) || (y_width >= image.height())) {
         return;
     }
@@ -1402,9 +1411,9 @@ inline void checkered_pattern(const unsigned int x_width, const unsigned int y_w
     }
 }
 
-inline void plasma(bitmap_image &image, const double &x, const double &y, const double &width, const double &height,
-                   const double &c1, const double &c2, const double &c3, const double &c4,
-                   const double &roughness = 3.0, const rgb_store colormap[] = 0) {
+inline void plasma(bitmap_image &image, const double &x, const double &y, const double &width,
+                   const double &height, const double &c1, const double &c2, const double &c3,
+                   const double &c4, const double &roughness = 3.0, const rgb_store colormap[] = 0) {
     // Note: c1,c2,c3,c4 -> [0.0,1.0]
 
     double half_width = (width / 2.0);
@@ -1422,19 +1431,23 @@ inline void plasma(bitmap_image &image, const double &x, const double &y, const 
         center = std::min<double>(std::max<double>(0.0, center), 1.0);
 
         plasma(image, x, y, half_width, half_height, c1, corner1, center, corner4, roughness, colormap);
-        plasma(image, x + half_width, y, half_width, half_height, corner1, c2, corner2, center, roughness, colormap);
-        plasma(image, x + half_width, y + half_height, half_width, half_height, center, corner2, c3, corner3, roughness,
+        plasma(image, x + half_width, y, half_width, half_height, corner1, c2, corner2, center, roughness,
                colormap);
-        plasma(image, x, y + half_height, half_width, half_height, corner4, center, corner3, c4, roughness, colormap);
+        plasma(image, x + half_width, y + half_height, half_width, half_height, center, corner2, c3, corner3,
+               roughness, colormap);
+        plasma(image, x, y + half_height, half_width, half_height, corner4, center, corner3, c4, roughness,
+               colormap);
     }
     else {
         rgb_store color = colormap[static_cast<unsigned int>(1000.0 * ((c1 + c2 + c3 + c4) / 4.0)) % 1000];
-        image.set_pixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y), color.red, color.green, color.blue);
+        image.set_pixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y), color.red, color.green,
+                        color.blue);
     }
 }
 
 inline double psnr_region(const unsigned int &x, const unsigned int &y, const unsigned int &width,
-                          const unsigned int &height, const bitmap_image &image1, const bitmap_image &image2) {
+                          const unsigned int &height, const bitmap_image &image1,
+                          const bitmap_image &image2) {
     if ((image1.width() != image2.width()) || (image1.height() != image2.height())) {
         return 0.0;
     }
@@ -1474,14 +1487,15 @@ inline void hierarchical_psnr_r(const double &x, const double &y, const double &
                                 const bitmap_image &image1, bitmap_image &image2, const double &threshold,
                                 const rgb_store colormap[]) {
     if ((width <= 4.0) || (height <= 4.0)) {
-        double psnr = psnr_region(static_cast<unsigned int>(x), static_cast<unsigned int>(y),
-                                  static_cast<unsigned int>(width), static_cast<unsigned int>(height), image1, image2);
+        double psnr =
+            psnr_region(static_cast<unsigned int>(x), static_cast<unsigned int>(y),
+                        static_cast<unsigned int>(width), static_cast<unsigned int>(height), image1, image2);
 
         if (psnr < threshold) {
             rgb_store c = colormap[static_cast<unsigned int>(1000.0 * (1.0 - (psnr / threshold)))];
             image2.set_region(static_cast<unsigned int>(x), static_cast<unsigned int>(y),
-                              static_cast<unsigned int>(width + 1), static_cast<unsigned int>(height + 1), c.red,
-                              c.green, c.blue);
+                              static_cast<unsigned int>(width + 1), static_cast<unsigned int>(height + 1),
+                              c.red, c.green, c.blue);
         }
     }
     else {
@@ -1490,8 +1504,8 @@ inline void hierarchical_psnr_r(const double &x, const double &y, const double &
 
         hierarchical_psnr_r(x, y, half_width, half_height, image1, image2, threshold, colormap);
         hierarchical_psnr_r(x + half_width, y, half_width, half_height, image1, image2, threshold, colormap);
-        hierarchical_psnr_r(x + half_width, y + half_height, half_width, half_height, image1, image2, threshold,
-                            colormap);
+        hierarchical_psnr_r(x + half_width, y + half_height, half_width, half_height, image1, image2,
+                            threshold, colormap);
         hierarchical_psnr_r(x, y + half_height, half_width, half_height, image1, image2, threshold, colormap);
     }
 }
@@ -1712,7 +1726,9 @@ class image_drawer {
         }
     }
 
-    void plot_pixel(int x, int y) { image_.set_pixel(x, y, pen_color_red_, pen_color_green_, pen_color_blue_); }
+    void plot_pixel(int x, int y) {
+        image_.set_pixel(x, y, pen_color_red_, pen_color_green_, pen_color_blue_);
+    }
 
     void pen_width(const unsigned int &width) {
         if ((width > 0) && (width < 4)) {

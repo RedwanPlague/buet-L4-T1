@@ -1,8 +1,8 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "Object.h"
-#include "Vector.h"
+#include "1605004_Object.h"
+#include "1605004_Vector.h"
 #include <GL/glut.h>
 #include <istream>
 

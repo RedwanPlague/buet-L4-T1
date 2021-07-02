@@ -1,17 +1,26 @@
 #ifndef FLOOR_H
 #define FLOOR_H
 
-#include "Object.h"
-#include "Vector.h"
+#include "1605004_Object.h"
+#include "1605004_Vector.h"
+#include "1605004_bitmap_image.hpp"
 #include <GL/glut.h>
 #include <algorithm>
 #include <istream>
+#include <string>
+
+extern bool textureOn;
 
 class Floor : public Object {
     double floorWidth, tileWidth, mid;
+    bitmap_image texture;
+    double tx, ty;
 
   public:
-    Floor(double fw, double tw) : floorWidth(fw), tileWidth(tw) {
+    Floor(double fw, double tw, std::string imageName) : floorWidth(fw), tileWidth(tw) {
+        texture = bitmap_image(imageName);
+        tx = tileWidth / texture.width();
+        ty = tileWidth / texture.width();
         mid = floorWidth / 2;
         k.amb = 0.4;
         k.dif = 0.4;
@@ -22,7 +31,7 @@ class Floor : public Object {
     }
 
     void draw() const {
-        for (double x = -mid, start = 0; x < mid; x += tileWidth, start = 1 - start) {
+        for (double x = -mid, start = 1; x < mid; x += tileWidth, start = 1 - start) {
             for (double y = -mid, shade = start; y < mid; y += tileWidth, shade = 1 - shade) {
                 glColor3f(shade, shade, shade);
 
@@ -47,7 +56,23 @@ class Floor : public Object {
     Color getColor(Point iPoint) const {
         int i = (iPoint.x + mid) / tileWidth;
         int j = (iPoint.y + mid) / tileWidth;
-        return ((i + j) & 1) ? Color(1, 1, 1) : Color(0, 0, 0);
+        if (textureOn) {
+            if ((i + j) & 1) {
+                double left = -mid + i * tileWidth;
+                double up = -mid + j * tileWidth + tileWidth;
+                int x = (iPoint.x - left) / tx;
+                int y = (up - iPoint.y) / ty;
+                unsigned char r, g, b;
+                texture.get_pixel(x, y, r, g, b);
+                return Color(r / 255.0, g / 255.0, b / 255.0);
+            }
+            else {
+                return Color(1, 1, 1);
+            }
+        }
+        else {
+            return ((i + j) & 1) ? Color(0, 0, 0) : Color(1, 1, 1);
+        }
     }
 
     double intersect(Ray ray) const {

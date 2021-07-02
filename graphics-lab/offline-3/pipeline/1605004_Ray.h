@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "Vector.h"
+#include "1605004_Vector.h"
 
 struct Ray {
     Point src;

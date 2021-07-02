@@ -1,8 +1,8 @@
 #ifndef GENERAL_H
 #define GENERAL_H
 
-#include "Object.h"
-#include "Vector.h"
+#include "1605004_Object.h"
+#include "1605004_Vector.h"
 #include <algorithm>
 #include <cmath>
 #include <istream>
@@ -51,10 +51,13 @@ class General : public Object {
         double aa = 2 * a;
 
         double tneg = (-b - sqrtD) / aa;
+        double tpos = (-b + sqrtD) / aa;
+        if (tpos < tneg)
+            std::swap(tpos, tneg);
+
         if (tneg > 0 && fits(R0 + tneg * Rd))
             return tneg;
 
-        double tpos = (-b + sqrtD) / aa;
         if (tpos > 0 && fits(R0 + tpos * Rd))
             return tpos;
 
