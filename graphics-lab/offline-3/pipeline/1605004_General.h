@@ -40,8 +40,17 @@ class General : public Object {
         double c = (A * R0.x * R0.x) + (B * R0.y * R0.y) + (C * R0.z * R0.z) + (D * R0.x * R0.y) +
                    (E * R0.x * R0.z) + (F * R0.y * R0.z) + (G * R0.x) + (H * R0.y) + (I * R0.z) + J;
 
-        if (a == 0)
-            return -1;
+        if (isZero(a)) {
+            if (isZero(b)) {
+                return -1;
+            }
+            else {
+                double t = -c / b;
+                if (t > 0 && fits(R0 + t * Rd))
+                    return t;
+                return -1;
+            }
+        }
 
         double D = b * b - 4 * a * c;
         if (D < 0)

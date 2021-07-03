@@ -79,7 +79,7 @@ class Sphere : public Object {
 
         double td = sqrt(r2 - d2);
 
-        return (R0dotR0 < r2) ? tp + td : tp - td;
+        return (R0dotR0 <= r2) ? tp + td : tp - td;
     }
 
     Vector getNormal(Ray ray) const { return fixNormal(ray.src - center, ray); }
