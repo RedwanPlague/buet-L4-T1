@@ -1,0 +1,10 @@
+{
+  "clangd.fallbackFlags": [
+    "-Wall",
+    "-Wextra"
+  ],
+  "clangd.semanticHighlighting": true,
+  "coc.preferences.formatOnSaveFiletypes": [
+    "c"
+  ]
+}

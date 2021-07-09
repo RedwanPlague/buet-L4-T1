@@ -1,0 +1,1 @@
+/usr/bin/cc -g CMakeFiles/dhcp.dir/main.c.o CMakeFiles/dhcp.dir/mine.c.o -o dhcp 

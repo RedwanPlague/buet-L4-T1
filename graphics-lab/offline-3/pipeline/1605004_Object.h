@@ -26,7 +26,7 @@ struct Coeffs {
 std::istream &operator>>(std::istream &in, Coeffs &k) {
     /* in >> k.amb >> k.dif >> k.spc >> k.rfl >> k.rfr; */
     in >> k.amb >> k.dif >> k.spc >> k.rfl;
-    k.rfr = 0.0;
+    k.rfr = 0.66667;
     return in;
 }
 
@@ -109,7 +109,7 @@ class Object {
             Object *nearest = getNearest(rfrRay);
             if (nearest) {
                 Color rfrColor = nearest->trace(rfrRay, depth - 1);
-                tColor += rfrColor;
+                tColor += k.rfl * rfrColor / 2;
             }
         }
 
