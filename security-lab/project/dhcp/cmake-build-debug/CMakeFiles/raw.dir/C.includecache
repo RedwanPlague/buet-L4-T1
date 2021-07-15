@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/redwan/Documents/L4-T1/all-codes/security-lab/project/dhcp/raw.c
+arpa/inet.h
+-
+linux/ip.h
+-
+linux/udp.h
+-
+locale.h
+-
+net/if.h
+-
+netinet/in.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+sys/socket.h
+-
+sys/time.h
+-
+sys/types.h
+-
+time.h
+-
+unistd.h
+-
+

@@ -38,7 +38,7 @@ void loadData() {
     fin >> maxDepth >> imgWidth;
     imgHeight = imgWidth;
 
-    objects.push_back(new Floor(1000, 20, dir / path("1605004.bmp")));
+    /* objects.push_back(new Floor(1000, 20, dir / path("1605004.bmp"))); */
 
     int no;
     fin >> no;

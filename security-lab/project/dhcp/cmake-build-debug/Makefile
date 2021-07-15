@@ -130,6 +130,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named raw
+
+# Build rule for target.
+raw: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 raw
+.PHONY : raw
+
+# fast build rule for target.
+raw/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/raw.dir/build.make CMakeFiles/raw.dir/build
+.PHONY : raw/fast
+
+#=============================================================================
 # Target rules for targets named main
 
 # Build rule for target.
@@ -169,6 +182,33 @@ main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.s
 .PHONY : main.c.s
 
+raw.o: raw.c.o
+
+.PHONY : raw.o
+
+# target to build an object file
+raw.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/raw.dir/build.make CMakeFiles/raw.dir/raw.c.o
+.PHONY : raw.c.o
+
+raw.i: raw.c.i
+
+.PHONY : raw.i
+
+# target to preprocess a source file
+raw.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/raw.dir/build.make CMakeFiles/raw.dir/raw.c.i
+.PHONY : raw.c.i
+
+raw.s: raw.c.s
+
+.PHONY : raw.s
+
+# target to generate assembly for a file
+raw.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/raw.dir/build.make CMakeFiles/raw.dir/raw.c.s
+.PHONY : raw.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -178,9 +218,13 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
+	@echo "... raw"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... raw.o"
+	@echo "... raw.i"
+	@echo "... raw.s"
 .PHONY : help
 
 
