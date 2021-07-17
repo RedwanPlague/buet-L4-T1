@@ -105,7 +105,7 @@ void bind_to_port(int sock) {
     }
 }
 
-int create_socket(char *interface_name) {
+int create_DHCP_socket(char *interface_name) {
     int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         perror("Could not create socket\n");
@@ -336,7 +336,7 @@ int main(int argc, char *argv[]) {
     DEBUG = 0;
     puts("DHCP Starvation is starting\n");
 
-    int sock = create_socket(interface_name);
+    int sock = create_DHCP_socket(interface_name);
     for (int i = 0; i < 30; i++) {
         make_random_hardware_address();
         send_DHCP_discover_packet(sock);

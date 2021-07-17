@@ -38,6 +38,10 @@ struct DHCP_packet {
 };
 typedef struct DHCP_packet DHCP_packet;
 
+struct Packet {
+    char data[100];
+};
+
 #define BOOT_REQUEST 1
 
 #define DHCP_DISCOVER 1
@@ -99,15 +103,15 @@ void bind_to_interface(int sock, char *interface_name) {
     }
 }
 
-void bind_to_port(int sock) {
-    struct sockaddr_in client_address = get_address(CLIENT_PORT, INADDR_ANY);
-    if (bind(sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0) {
-        printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", CLIENT_PORT);
+void bind_to_port(int sock, int port) {
+    struct sockaddr_in client_address = get_address(port, INADDR_ANY);
+    if (bind(sock, (struct sockaddr *) &client_address, sizeof(client_address)) < 0) {
+        printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", port);
         exit(EXIT_FAILURE);
     }
 }
 
-int create_socket(char *interface_name) {
+int create_DHCP_socket(char *interface_name) {
     int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         perror("Could not create socket\n");
@@ -119,13 +123,30 @@ int create_socket(char *interface_name) {
     set_reuse_flag(sock);
     set_broadcast_flag(sock);
     bind_to_interface(sock, interface_name);
-    bind_to_port(sock);
+    bind_to_port(sock, CLIENT_PORT);
+
+    return sock;
+}
+
+int create_normal_socket(char *interface_name) {
+    int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        perror("Could not create socket\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("File descriptor for new socket: %d\n\n", sock);
+
+    set_reuse_flag(sock);
+    set_broadcast_flag(sock);
+    bind_to_interface(sock, interface_name);
+    bind_to_port(sock, 547);
 
     return sock;
 }
 
 int send_packet(void *buffer, int buffer_size, int sock, struct sockaddr_in *dest) {
-    int result = (int)sendto(sock, buffer, buffer_size, 0, (struct sockaddr *)dest, sizeof(*dest));
+    int result = (int) sendto(sock, buffer, buffer_size, 0, (struct sockaddr *) dest, sizeof(*dest));
 
     if (DEBUG) {
         printf("send_packet result: %d\n", result);
@@ -155,13 +176,12 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
             printf("No (more) data received\n");
         }
         return ERROR;
-    }
-    else {
+    } else {
         socklen_t address_size = sizeof(*source_address);
         memset(source_address, 0, address_size);
         memset(buffer, 0, sizeof(*buffer));
         int received_data =
-                (int)recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *)source_address, &address_size);
+                (int) recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *) source_address, &address_size);
 
         return (received_data == -1) ? ERROR : OK;
     }
@@ -284,7 +304,7 @@ int get_DHCP_reply_packet(int sock, char type) {
         int result = receive_packet(&packet, sizeof(packet), sock, &source);
 
         if (result == ERROR) return ERROR;
-        if(packet.op != 2) continue;
+        if (packet.op != 2) continue;
 
         if (DEBUG) {
             printf("DHCP_OFFER from IP address %s\n", inet_ntoa(source.sin_addr));
@@ -326,8 +346,7 @@ int get_DHCP_reply_packet(int sock, char type) {
 
         if (type == DHCP_OFFER) {
             send_DHCP_request_packet(sock, source.sin_addr);
-        }
-        else if (type == DHCP_ACK) {
+        } else if (type == DHCP_ACK) {
             int i = 4;
             while (i < MAX_OPTIONS_LENGTH && packet.options[i] != 3 && packet.options[i] != '\xFF') {
                 i++;
@@ -336,14 +355,26 @@ int get_DHCP_reply_packet(int sock, char type) {
             }
             if (packet.options[i] == '\xFF') return OK;
 
-            default_gateway.s_addr |= ((int)packet.options[i+2] & 0x000000FF);
-            default_gateway.s_addr |= ((int)packet.options[i+3] & 0x000000FF) << 8;
-            default_gateway.s_addr |= ((int)packet.options[i+4] & 0x000000FF) << 16;
-            default_gateway.s_addr |= ((int)packet.options[i+5] & 0x000000FF) << 24;
+            default_gateway.s_addr |= ((int) packet.options[i + 2] & 0x000000FF);
+            default_gateway.s_addr |= ((int) packet.options[i + 3] & 0x000000FF) << 8;
+            default_gateway.s_addr |= ((int) packet.options[i + 4] & 0x000000FF) << 16;
+            default_gateway.s_addr |= ((int) packet.options[i + 5] & 0x000000FF) << 24;
         }
 
         return OK;
     }
+}
+
+int send_normal_packet(int sock, char *s) {
+    struct Packet packet;
+    memcpy(packet.data, s, sizeof(*s));
+    struct sockaddr_in default_address = get_address(547, default_gateway.s_addr);
+    while (send_packet(&packet, sizeof(packet), sock, &default_address) == ERROR) {
+        if (DEBUG) {
+            printf("Error in sending packet... resending the packet\n");
+        }
+    }
+    return OK;
 }
 
 int main(int argc, char *argv[]) {
@@ -360,13 +391,24 @@ int main(int argc, char *argv[]) {
     DEBUG = 0;
     puts("DHCP Starvation is starting\n");
 
-    int sock = create_socket(interface_name);
+    int sock = create_DHCP_socket(interface_name);
     make_random_hardware_address();
     send_DHCP_discover_packet(sock);
     fflush(stdout);
+    // close(sock);
 
     printf("Default Gateway is: %s\n", inet_ntoa(default_gateway));
 
+    // sock = create_normal_socket(interface_name);
+    for (int i = 0; i < 5; i++) {
+        size_t len = 100;
+        char *s = (char*)malloc(len);
+        printf("Enter message: ");
+        fflush(stdout);
+        getline(&s, &len, stdin);
+        send_normal_packet(sock, s);
+        free(s);
+    }
     close(sock);
 
     return 0;

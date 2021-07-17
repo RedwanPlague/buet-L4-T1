@@ -59,6 +59,7 @@ typedef struct DHCP_packet DHCP_packet;
 struct ifreq interface;
 struct in_addr server_ip;
 int offer_count = START_IP;
+int normal;
 
 unsigned char random_mac[MAX_CHADDR_LENGTH];
 u_int32_t transaction_id = 0;
@@ -98,15 +99,15 @@ void bind_to_interface(int sock, char *interface_name) {
     }
 }
 
-void bind_to_port(int sock) {
-    struct sockaddr_in client_address = get_address(SERVER_PORT, INADDR_ANY);
+void bind_to_port(int sock, int port) {
+    struct sockaddr_in client_address = get_address(port, INADDR_ANY);
     if (bind(sock, (struct sockaddr *) &client_address, sizeof(client_address)) < 0) {
-        printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", SERVER_PORT);
+        printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", port);
         exit(EXIT_FAILURE);
     }
 }
 
-int create_socket(char *interface_name) {
+int create_DHCP_socket(char *interface_name) {
     int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         perror("Could not create socket\n");
@@ -118,7 +119,24 @@ int create_socket(char *interface_name) {
     set_reuse_flag(sock);
     set_broadcast_flag(sock);
     bind_to_interface(sock, interface_name);
-    bind_to_port(sock);
+    bind_to_port(sock, SERVER_PORT);
+
+    return sock;
+}
+
+int create_normal_socket(char *interface_name) {
+    int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        perror("Could not create socket\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("File descriptor for new socket: %d\n\n", sock);
+
+    set_reuse_flag(sock);
+    set_broadcast_flag(sock);
+    bind_to_interface(sock, interface_name);
+    bind_to_port(sock, 547);
 
     return sock;
 }
@@ -140,11 +158,22 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
     fd_set /*file descriptor set*/ read_fds;
     FD_ZERO(&read_fds);
     FD_SET(sock, &read_fds);
+    FD_SET(normal, &read_fds);
 
-    select(sock + 1, &read_fds, NULL, NULL, NULL);
+    select((sock > normal ? sock : normal) + 1, &read_fds, NULL, NULL, NULL);
 
-    /* make sure some data has arrived */
-    if (!FD_ISSET(sock, &read_fds)) {
+    if (FD_ISSET(normal, &read_fds)) {
+        socklen_t address_size = sizeof(*source_address);
+        memset(source_address, 0, address_size);
+        memset(buffer, 0, sizeof(*buffer));
+        int received_data =
+                (int) recvfrom(normal, buffer, 100, 0, (struct sockaddr *) source_address, &address_size);
+        if (received_data == -1) return ERROR;
+        printf("Message from %s: %s\n", inet_ntoa(source_address->sin_addr), (char *)buffer);
+        fflush(stdout);
+        return OK;
+    }
+    else if (!FD_ISSET(sock, &read_fds)) {
         if (DEBUG) {
             printf("No (more) data received\n");
         }
@@ -218,7 +247,8 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
 
     packet->options[13] = 51; // lease time
     packet->options[14] = 4;
-    memset(packet->options + 15, 1, 4); // time = (2^0 + 2^8 + 2^16 + 2^24) secs
+    char lease[4] = {120, 0, 0, 0};
+    memcpy(packet->options + 15, lease, 4); // time = 120 seconds
 
     packet->options[13] = 54; // DHCP server IP
     packet->options[14] = 4;
@@ -291,13 +321,17 @@ int main(int argc, char *argv[]) {
     DEBUG = 1;
     puts("DHCP Server is starting\n");
 
-    int sock = create_socket(interface_name);
+    int sock = create_DHCP_socket(interface_name);
     ioctl(sock, SIOCGIFADDR, &interface);
     server_ip = ((struct sockaddr_in *) &interface.ifr_addr)->sin_addr;
+
+    normal = create_normal_socket(interface_name);
+    fflush(stdout);
 
     while (serve_packet(sock) == OK);
 
     close(sock);
+    close(normal);
 
     return 0;
 }
