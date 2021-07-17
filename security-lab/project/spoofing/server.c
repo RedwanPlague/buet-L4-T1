@@ -254,9 +254,11 @@ int serve_packet(int sock) {
     int i = 4;
     while (i < MAX_OPTIONS_LENGTH && packet.options[i] != 53 && packet.options[i] != '\xFF') {
         i++;
-        int skip = (int) packet.options[i];
+        int skip = (int) packet.options[i++];
         while (skip--) i++;
     }
+    if (packet.options[i] == '\xFF') return OK;
+
     char type = packet.options[i + 2];
 
     if (type == DHCP_DISCOVER) {

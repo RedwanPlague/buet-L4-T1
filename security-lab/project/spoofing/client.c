@@ -41,10 +41,10 @@ typedef struct DHCP_packet DHCP_packet;
 #define BOOT_REQUEST 1
 
 #define DHCP_DISCOVER 1
+#define DHCP_OFFER    2
 #define DHCP_REQUEST  3
-// #define DHCP_OFFER    2
-// #define DHCP_ACK      5
-// #define DHCP_NACK     6
+#define DHCP_ACK      5
+#define DHCP_NACK     6
 
 #define OPTION_MESSAGE_TYPE    53
 #define OPTION_ADDRESS_REQUEST 50
@@ -62,6 +62,8 @@ unsigned char random_mac[MAX_CHADDR_LENGTH];
 u_int32_t transaction_id = 0;
 int DEBUG = 0;
 struct in_addr offered_address;
+
+struct in_addr default_gateway;
 
 struct sockaddr_in get_address(in_port_t port, in_addr_t ip) {
     struct sockaddr_in address;
@@ -198,6 +200,8 @@ void set_option(DHCP_packet *packet, int *index, char option, char size, void *d
     *index += size + 2;
 }
 
+int get_DHCP_reply_packet(int sock, char type);
+
 int send_DHCP_discover_packet(int sock) {
     DHCP_packet discover_packet;
     bzero(&discover_packet, sizeof(discover_packet));
@@ -226,6 +230,8 @@ int send_DHCP_discover_packet(int sock) {
             printf("Error in sending packet... resending the packet\n");
         }
     }
+
+    get_DHCP_reply_packet(sock, DHCP_OFFER);
 
     return OK;
 }
@@ -266,28 +272,30 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
         }
     }
 
+    get_DHCP_reply_packet(sock, DHCP_ACK);
+
     return OK;
 }
 
-int get_DHCP_offer_packet(int sock) {
+int get_DHCP_reply_packet(int sock, char type) {
     while (1) {
-        DHCP_packet offer_packet;
+        DHCP_packet packet;
         struct sockaddr_in source;
-        int result = receive_packet(&offer_packet, sizeof(offer_packet), sock, &source);
+        int result = receive_packet(&packet, sizeof(packet), sock, &source);
 
         if (result == ERROR) return ERROR;
-        if(offer_packet.op != 2) continue;
+        if(packet.op != 2) continue;
 
         if (DEBUG) {
             printf("DHCP_OFFER from IP address %s\n", inet_ntoa(source.sin_addr));
-            printf("DHCP_OFFER XID: %u (0x%X)\n", ntohl(offer_packet.xid), ntohl(offer_packet.xid));
+            printf("DHCP_OFFER XID: %u (0x%X)\n", ntohl(packet.xid), ntohl(packet.xid));
         }
 
         /* check packet xid to see if its the same as the one we used in the discover packet */
-        if (ntohl(offer_packet.xid) != transaction_id) {
+        if (ntohl(packet.xid) != transaction_id) {
             if (DEBUG) {
                 printf("DHCP_OFFER XID (%u) did not match DHCP_DISCOVER XID (%u) - ignoring packet\n",
-                       ntohl(offer_packet.xid), transaction_id);
+                       ntohl(packet.xid), transaction_id);
             }
             continue;
         }
@@ -300,9 +308,9 @@ int get_DHCP_offer_packet(int sock) {
         result = OK;
         for (int x = 0; x < HLEN; x++) {
             if (DEBUG) {
-                printf("%02X", (unsigned char) offer_packet.chaddr[x]);
+                printf("%02X", (unsigned char) packet.chaddr[x]);
             }
-            if (offer_packet.chaddr[x] != random_mac[x]) {
+            if (packet.chaddr[x] != random_mac[x]) {
                 if (DEBUG) {
                     printf("DHCP_OFFER hardware address did not match our own - ignoring packet\n");
                 }
@@ -313,10 +321,26 @@ int get_DHCP_offer_packet(int sock) {
 
         if (result == ERROR) continue;
 
-        printf("OFFERED ADDRESS:    %s\n", inet_ntoa(offer_packet.yiaddr));
-        offered_address = offer_packet.yiaddr;
+        printf("OFFERED ADDRESS:    %s\n", inet_ntoa(packet.yiaddr));
+        offered_address = packet.yiaddr;
 
-        send_DHCP_request_packet(sock, source.sin_addr);
+        if (type == DHCP_OFFER) {
+            send_DHCP_request_packet(sock, source.sin_addr);
+        }
+        else if (type == DHCP_ACK) {
+            int i = 4;
+            while (i < MAX_OPTIONS_LENGTH && packet.options[i] != 3 && packet.options[i] != '\xFF') {
+                i++;
+                int skip = (int) packet.options[i++];
+                while (skip--) i++;
+            }
+            if (packet.options[i] == '\xFF') return OK;
+
+            default_gateway.s_addr |= ((int)packet.options[i+2] & 0x000000FF);
+            default_gateway.s_addr |= ((int)packet.options[i+3] & 0x000000FF) << 8;
+            default_gateway.s_addr |= ((int)packet.options[i+4] & 0x000000FF) << 16;
+            default_gateway.s_addr |= ((int)packet.options[i+5] & 0x000000FF) << 24;
+        }
 
         return OK;
     }
@@ -337,12 +361,11 @@ int main(int argc, char *argv[]) {
     puts("DHCP Starvation is starting\n");
 
     int sock = create_socket(interface_name);
-    for (int i = 0; i < 30; i++) {
-        make_random_hardware_address();
-        send_DHCP_discover_packet(sock);
-        get_DHCP_offer_packet(sock);
-        fflush(stdout);
-    }
+    make_random_hardware_address();
+    send_DHCP_discover_packet(sock);
+    fflush(stdout);
+
+    printf("Default Gateway is: %s\n", inet_ntoa(default_gateway));
 
     close(sock);
 
