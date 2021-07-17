@@ -169,16 +169,11 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
         int received_data =
                 (int) recvfrom(normal, buffer, 100, 0, (struct sockaddr *) source_address, &address_size);
         if (received_data == -1) return ERROR;
-        printf("Message from %s: %s\n", inet_ntoa(source_address->sin_addr), (char *)buffer);
+        printf("Message from %s: %s", inet_ntoa(source_address->sin_addr), (char *)buffer);
         fflush(stdout);
         return OK;
     }
-    else if (!FD_ISSET(sock, &read_fds)) {
-        if (DEBUG) {
-            printf("No (more) data received\n");
-        }
-        return ERROR;
-    } else {
+    else if (FD_ISSET(sock, &read_fds)) {
         socklen_t address_size = sizeof(*source_address);
         memset(source_address, 0, address_size);
         memset(buffer, 0, sizeof(*buffer));
@@ -186,6 +181,12 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
                 (int) recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *) source_address, &address_size);
 
         return (received_data == -1) ? ERROR : OK;
+    }
+    else {
+        if (DEBUG) {
+            printf("No (more) data received\n");
+        }
+        return ERROR;
     }
 }
 

@@ -14,6 +14,8 @@
 #define OK 0
 #define ERROR -1
 
+#define MAX_MSG_LENGTH 100
+
 #define MAX_CHADDR_LENGTH  16
 #define MAX_SNAME_LENGTH   64
 #define MAX_FILE_LENGTH    128
@@ -37,10 +39,6 @@ struct DHCP_packet {
     char options[MAX_OPTIONS_LENGTH];        /* options */
 };
 typedef struct DHCP_packet DHCP_packet;
-
-struct Packet {
-    char data[100];
-};
 
 #define BOOT_REQUEST 1
 
@@ -366,10 +364,8 @@ int get_DHCP_reply_packet(int sock, char type) {
 }
 
 int send_normal_packet(int sock, char *s) {
-    struct Packet packet;
-    memcpy(packet.data, s, sizeof(*s));
     struct sockaddr_in default_address = get_address(547, default_gateway.s_addr);
-    while (send_packet(&packet, sizeof(packet), sock, &default_address) == ERROR) {
+    while (send_packet(s, MAX_MSG_LENGTH, sock, &default_address) == ERROR) {
         if (DEBUG) {
             printf("Error in sending packet... resending the packet\n");
         }
@@ -401,7 +397,7 @@ int main(int argc, char *argv[]) {
 
     // sock = create_normal_socket(interface_name);
     for (int i = 0; i < 5; i++) {
-        size_t len = 100;
+        size_t len = MAX_MSG_LENGTH;
         char *s = (char*)malloc(len);
         printf("Enter message: ");
         fflush(stdout);
