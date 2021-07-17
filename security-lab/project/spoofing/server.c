@@ -212,7 +212,7 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
     packet->options[5] = 1;
     packet->options[6] = type;
 
-    packet->options[7] = 3; // router IP
+    packet->options[7] = 3; // default gateway router IP
     packet->options[8] = 4;
     set_server_ip(packet, 9);
 
@@ -224,7 +224,11 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
     packet->options[14] = 4;
     set_server_ip(packet, 15);
 
-    packet->options[19] = '\xFF';
+    packet->options[19] = 6; // DNS server IP
+    packet->options[20] = 4;
+    set_server_ip(packet, 21);
+
+    packet->options[25] = '\xFF';
 
     struct sockaddr_in broadcast_address = get_address(CLIENT_PORT, INADDR_BROADCAST);
     while (send_packet(packet, sizeof(*packet), sock, &broadcast_address) == ERROR) {

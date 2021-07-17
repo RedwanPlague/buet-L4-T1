@@ -130,6 +130,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named attacker
+
+# Build rule for target.
+attacker: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 attacker
+.PHONY : attacker
+
+# fast build rule for target.
+attacker/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/attacker.dir/build.make CMakeFiles/attacker.dir/build
+.PHONY : attacker/fast
+
+#=============================================================================
 # Target rules for targets named server
 
 # Build rule for target.
@@ -154,6 +167,33 @@ client: cmake_check_build_system
 client/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
 .PHONY : client/fast
+
+attacker.o: attacker.c.o
+
+.PHONY : attacker.o
+
+# target to build an object file
+attacker.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/attacker.dir/build.make CMakeFiles/attacker.dir/attacker.c.o
+.PHONY : attacker.c.o
+
+attacker.i: attacker.c.i
+
+.PHONY : attacker.i
+
+# target to preprocess a source file
+attacker.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/attacker.dir/build.make CMakeFiles/attacker.dir/attacker.c.i
+.PHONY : attacker.c.i
+
+attacker.s: attacker.c.s
+
+.PHONY : attacker.s
+
+# target to generate assembly for a file
+attacker.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/attacker.dir/build.make CMakeFiles/attacker.dir/attacker.c.s
+.PHONY : attacker.c.s
 
 client.o: client.c.o
 
@@ -217,8 +257,12 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... attacker"
 	@echo "... client"
 	@echo "... server"
+	@echo "... attacker.o"
+	@echo "... attacker.i"
+	@echo "... attacker.s"
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"
