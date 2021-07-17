@@ -1,16 +1,18 @@
 #include <arpa/inet.h>
-#include <locale.h>
+#include <clocale>
 #include <net/if.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/socket.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
+
+using namespace std;
 
 #define OK 0
 #define ERROR -1
@@ -53,12 +55,8 @@ typedef struct DHCP_packet DHCP_packet;
 #define HTYPE 1
 #define HLEN  6
 
-#define START_IP 120
-#define END_IP 150
-
-struct ifreq interface;
-struct in_addr server_ip;
-int offer_count = START_IP;
+ifreq interface;
+in_addr server_ip;
 
 unsigned char random_mac[MAX_CHADDR_LENGTH];
 u_int32_t transaction_id = 0;
@@ -66,7 +64,7 @@ int DEBUG = 0;
 struct in_addr offered_address;
 
 struct sockaddr_in get_address(in_port_t port, in_addr_t ip) {
-    struct sockaddr_in address;
+    sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = ip;
@@ -141,7 +139,7 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
     FD_ZERO(&read_fds);
     FD_SET(sock, &read_fds);
 
-    select(sock + 1, &read_fds, NULL, NULL, NULL);
+    select(sock + 1, &read_fds, nullptr, nullptr, nullptr);
 
     /* make sure some data has arrived */
     if (!FD_ISSET(sock, &read_fds)) {
@@ -152,7 +150,7 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
     } else {
         socklen_t address_size = sizeof(*source_address);
         memset(source_address, 0, address_size);
-        memset(buffer, 0, sizeof(*buffer));
+        memset(buffer, 0, sizeof(*(char*)buffer));
         int received_data =
                 (int) recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *) source_address, &address_size);
 
@@ -170,47 +168,25 @@ int set_magic_cookie(DHCP_packet *packet) {
 
 void set_server_ip(DHCP_packet *packet, int pos) {
     uint32_t ip = server_ip.s_addr;
-    packet->options[pos] = (char) (ip & 0x000000FF);
+    packet->options[pos] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 1] = (char) (ip & 0x000000FF);
+    packet->options[pos+1] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 2] = (char) (ip & 0x000000FF);
+    packet->options[pos+2] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 3] = (char) (ip & 0x000000FF);
+    packet->options[pos+3] = (char)(ip & 0x000000FF);
 }
 
-struct in_addr make_offer_ip() {
-    struct in_addr addr = server_ip;
-    addr.s_addr &= 0x00FFFFFF;
-    addr.s_addr |= (offer_count << 24);
-    offer_count++;
-    return addr;
-}
-
-int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
+int send_DHCP_offer_packet(int sock, DHCP_packet *packet) {
     packet->op = 2;
 
-    if (type == DHCP_OFFER) {
-        packet->ciaddr.s_addr = 0;
-        packet->giaddr.s_addr = 0;
-        packet->yiaddr = make_offer_ip();
-        packet->siaddr = server_ip;
-        printf("Offering IP: %s\n", inet_ntoa(packet->yiaddr));
-    }
-    else if (type == DHCP_ACK) {
-        packet->yiaddr = packet->ciaddr;
-        packet->ciaddr.s_addr = 0;
-        packet->giaddr.s_addr = 0;
-        packet->siaddr = server_ip;
-        printf("Grant IP: %s\n", inet_ntoa(packet->yiaddr));
-    }
-
     bzero(packet->options, sizeof(packet->options));
+
     set_magic_cookie(packet);
 
     packet->options[4] = 53; // message type
     packet->options[5] = 1;
-    packet->options[6] = type;
+    packet->options[6] = DHCP_OFFER;
 
     packet->options[7] = 3; // router IP
     packet->options[8] = 4;
@@ -218,7 +194,7 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
 
     packet->options[13] = 51; // lease time
     packet->options[14] = 4;
-    memset(packet->options + 15, 1, 4); // time = (2^0 + 2^8 + 2^16 + 2^24) secs
+    memset(packet->options+15, 1, 4); // time = (2^0 + 2^8 + 2^16 + 2^24) secs
 
     packet->options[13] = 54; // DHCP server IP
     packet->options[14] = 4;
@@ -233,39 +209,47 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
         }
     }
 
-    fflush(stdout);
     return OK;
 }
 
 int serve_packet(int sock) {
     DHCP_packet packet;
-    struct sockaddr_in source;
+    sockaddr_in source{};
     int result = receive_packet(&packet, sizeof(packet), sock, &source);
+
+    cout << "here 1" << endl;
 
     if (result == ERROR) return ERROR;
     if (packet.op != 1) return OK;
 
-    if (offer_count > END_IP) return OK;
+    cout << "here 2" << endl;
 
     int i = 4;
     while (i < MAX_OPTIONS_LENGTH && packet.options[i] != 53 && packet.options[i] != '\xFF') {
         i++;
-        int skip = (int) packet.options[i];
+        int skip = (int)(unsigned char)packet.options[i];
         while (skip--) i++;
     }
-    char type = packet.options[i + 2];
+    int type = (int)(unsigned char)packet.options[i + 2];
+
+    cout << "here 3" << endl;
 
     if (type == DHCP_DISCOVER) {
         if (DEBUG) {
             printf("DHCP_DISCOVER from IP address %s\n", inet_ntoa(source.sin_addr));
+            printf("DHCP_DISCOVER XID: %u (0x%X)\n", ntohl(packet.xid), ntohl(packet.xid));
         }
-        return send_DHCP_reply_packet(sock, &packet, DHCP_OFFER);
+
+        cout << "here 3" << endl;
+
+        return send_DHCP_offer_packet(sock, &packet);
     }
     else if (type == DHCP_REQUEST) {
         if (DEBUG) {
             printf("DHCP_REQUEST from IP address %s\n", inet_ntoa(source.sin_addr));
+            printf("DHCP_REQUEST XID: %u (0x%X)\n", ntohl(packet.xid), ntohl(packet.xid));
         }
-        return send_DHCP_reply_packet(sock, &packet, DHCP_ACK);
+        // return send_DHCP_request_packet(sock);
     }
 
     return OK;
@@ -280,16 +264,18 @@ int main(int argc, char *argv[]) {
     char interface_name[8];
     strcpy(interface_name, argv[1]);
 
-    srand(time(NULL)); // NOLINT(cert-msc51-cpp)
+    srand(time(nullptr)); // NOLINT(cert-msc51-cpp)
 
     DEBUG = 1;
     puts("DHCP Server is starting\n");
+    fflush(stdout);
 
     int sock = create_socket(interface_name);
     ioctl(sock, SIOCGIFADDR, &interface);
-    server_ip = ((struct sockaddr_in *) &interface.ifr_addr)->sin_addr;
+    server_ip = ((sockaddr_in*)&interface.ifr_addr)->sin_addr;
 
-    while (serve_packet(sock) == OK);
+    // while (serve_packet(sock));
+    serve_packet(sock);
 
     close(sock);
 

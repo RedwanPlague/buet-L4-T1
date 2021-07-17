@@ -6,28 +6,26 @@
 
 #IncludeRegexTransform: 
 
-/home/redwan/Documents/L4-T1/all-codes/security-lab/project/spoofing/client.c
+/home/redwan/Documents/L4-T1/all-codes/security-lab/project/zahin-spoofing/client.cpp
 arpa/inet.h
 -
-locale.h
+clocale
 -
 net/if.h
 -
 netinet/in.h
 -
-stdio.h
+cstdio
 -
-stdlib.h
+cstdlib
 -
-string.h
+cstring
 -
 sys/socket.h
 -
-sys/time.h
+ctime
 -
 sys/types.h
--
-time.h
 -
 unistd.h
 -
