@@ -180,7 +180,7 @@ int send_DHCP_discover_packet(int sock) {
     discover_packet.hlen = HLEN;
     discover_packet.hops = 0;
 
-    transaction_id = random();
+    transaction_id = rand();
     discover_packet.xid = htonl(transaction_id);
     discover_packet.secs = htons(0x00);
     discover_packet.flags = htons(BROADCAST_FLAG);
@@ -226,7 +226,7 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
 
     request_packet.options[4] = OPTION_MESSAGE_TYPE;
     request_packet.options[5] = 1;
-    request_packet.options[6] = DHCP_DISCOVER;
+    request_packet.options[6] = DHCP_REQUEST;
 
     request_packet.options[7] = OPTION_ADDRESS_REQUEST;
     request_packet.options[8] = 4;
@@ -251,7 +251,11 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
 }
 
 int get_DHCP_reply_packet(int sock, char type) {
+    time_t start_time = time(NULL), timeout = 5;
     while (1) {
+        time_t current_time = time(NULL);
+        if (current_time - start_time > timeout) break;
+
         DHCP_packet packet;
         struct sockaddr_in source;
         int result = receive_packet(&packet, sizeof(packet), sock, &source);
@@ -273,10 +277,9 @@ int get_DHCP_reply_packet(int sock, char type) {
 
         if (result == ERROR) continue;
 
-        printf("Offered Address:    %s\n", inet_ntoa(packet.yiaddr));
-        offered_address = packet.yiaddr;
-
         if (type == DHCP_OFFER) {
+            printf("Offered Address:    %s\n", inet_ntoa(packet.yiaddr));
+            offered_address = packet.yiaddr;
             send_DHCP_request_packet(sock, source.sin_addr);
         } else if (type == DHCP_ACK) {
             int i = 4;
@@ -295,6 +298,7 @@ int get_DHCP_reply_packet(int sock, char type) {
 
         return OK;
     }
+    return ERROR;
 }
 
 int send_normal_packet(int sock, char *s) {

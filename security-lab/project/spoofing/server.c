@@ -5,14 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
 
-#define OK 0
+#define OK    0
 #define ERROR -1
 
 #define MAX_CHADDR_LENGTH  16
@@ -54,7 +54,7 @@ typedef struct DHCP_packet DHCP_packet;
 #define HLEN  6
 
 #define START_IP 120
-#define END_IP 150
+#define END_IP   150
 
 struct ifreq interface;
 struct in_addr server_ip;
@@ -81,7 +81,7 @@ int create_DHCP_socket(char *interface_name) {
         exit(EXIT_FAILURE);
     }
 
-    printf("New DHCP socket created");
+    printf("New DHCP socket created\n");
 
     int opt_val = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val)) < 0) {
@@ -99,7 +99,7 @@ int create_DHCP_socket(char *interface_name) {
         exit(EXIT_FAILURE);
     }
     struct sockaddr_in client_address = get_address(SERVER_PORT, INADDR_ANY);
-    if (bind(sock, (struct sockaddr *) &client_address, sizeof(client_address)) < 0) {
+    if (bind(sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0) {
         printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", SERVER_PORT);
         exit(EXIT_FAILURE);
     }
@@ -114,7 +114,7 @@ int create_normal_socket(char *interface_name) {
         exit(EXIT_FAILURE);
     }
 
-    printf("New Communication socket created");
+    printf("New Communication socket created\n");
 
     int opt_val = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val)) < 0) {
@@ -132,7 +132,7 @@ int create_normal_socket(char *interface_name) {
         exit(EXIT_FAILURE);
     }
     struct sockaddr_in client_address = get_address(547, INADDR_ANY);
-    if (bind(sock, (struct sockaddr *) &client_address, sizeof(client_address)) < 0) {
+    if (bind(sock, (struct sockaddr *)&client_address, sizeof(client_address)) < 0) {
         printf("\tCould not bind to DHCP socket (port %d)! Check your privileges...\n", 547);
         exit(EXIT_FAILURE);
     }
@@ -141,7 +141,7 @@ int create_normal_socket(char *interface_name) {
 }
 
 int send_packet(void *buffer, int buffer_size, int sock, struct sockaddr_in *dest) {
-    int result = (int) sendto(sock, buffer, buffer_size, 0, (struct sockaddr *) dest, sizeof(*dest));
+    int result = (int)sendto(sock, buffer, buffer_size, 0, (struct sockaddr *)dest, sizeof(*dest));
 
     if (result < 0) {
         return ERROR;
@@ -161,9 +161,9 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
         socklen_t address_size = sizeof(*source_address);
         memset(source_address, 0, address_size);
         memset(buffer, 0, sizeof(*buffer));
-        int received_data =
-                (int) recvfrom(normal, buffer, 100, 0, (struct sockaddr *) source_address, &address_size);
-        if (received_data == -1) return ERROR;
+        int received_data = (int)recvfrom(normal, buffer, 100, 0, (struct sockaddr *)source_address, &address_size);
+        if (received_data == -1)
+            return ERROR;
         printf("Message from %s: %s", inet_ntoa(source_address->sin_addr), (char *)buffer);
         fflush(stdout);
         return OK;
@@ -173,7 +173,7 @@ int receive_packet(void *buffer, size_t buffer_size, int sock, struct sockaddr_i
         memset(source_address, 0, address_size);
         memset(buffer, 0, sizeof(*buffer));
         int received_data =
-                (int) recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *) source_address, &address_size);
+            (int)recvfrom(sock, buffer, buffer_size, 0, (struct sockaddr *)source_address, &address_size);
 
         return (received_data == -1) ? ERROR : OK;
     }
@@ -191,13 +191,13 @@ void set_magic_cookie(DHCP_packet *packet) {
 
 void set_server_ip(DHCP_packet *packet, int pos) {
     uint32_t ip = server_ip.s_addr;
-    packet->options[pos] = (char) (ip & 0x000000FF);
+    packet->options[pos] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 1] = (char) (ip & 0x000000FF);
+    packet->options[pos + 1] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 2] = (char) (ip & 0x000000FF);
+    packet->options[pos + 2] = (char)(ip & 0x000000FF);
     ip >>= 8;
-    packet->options[pos + 3] = (char) (ip & 0x000000FF);
+    packet->options[pos + 3] = (char)(ip & 0x000000FF);
 }
 
 struct in_addr make_offer_ip() {
@@ -266,18 +266,23 @@ int serve_packet(int sock) {
     struct sockaddr_in source;
     int result = receive_packet(&packet, sizeof(packet), sock, &source);
 
-    if (result == ERROR) return ERROR;
-    if (packet.op != 1) return OK;
+    if (result == ERROR)
+        return ERROR;
+    if (packet.op != 1)
+        return OK;
 
-    if (offer_count > END_IP) return OK;
+    if (offer_count > END_IP)
+        return OK;
 
     int i = 4;
     while (i < MAX_OPTIONS_LENGTH && packet.options[i] != 53 && packet.options[i] != '\xFF') {
         i++;
-        int skip = (int) packet.options[i++];
-        while (skip--) i++;
+        int skip = (int)packet.options[i++];
+        while (skip--)
+            i++;
     }
-    if (packet.options[i] == '\xFF') return OK;
+    if (packet.options[i] == '\xFF')
+        return OK;
 
     char type = packet.options[i + 2];
 
@@ -294,7 +299,7 @@ int serve_packet(int sock) {
 }
 
 int main() {
-    char interface_name[8] = "enp0s3";
+    char interface_name[8] = "lo";
 
     srand(time(NULL));
 
@@ -302,12 +307,13 @@ int main() {
 
     int sock = create_DHCP_socket(interface_name);
     ioctl(sock, SIOCGIFADDR, &interface);
-    server_ip = ((struct sockaddr_in *) &interface.ifr_addr)->sin_addr;
+    server_ip = ((struct sockaddr_in *)&interface.ifr_addr)->sin_addr;
 
     normal = create_normal_socket(interface_name);
     fflush(stdout);
 
-    while (serve_packet(sock) == OK);
+    while (serve_packet(sock) == OK)
+        ;
 
     close(sock);
     close(normal);
