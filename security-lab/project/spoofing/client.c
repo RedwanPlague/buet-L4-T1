@@ -310,7 +310,7 @@ int send_normal_packet(int sock, char *s) {
 }
 
 int main() {
-    char interface_name[8] = "enp0s3";
+    char interface_name[8];
 
     srand(time(NULL));
 

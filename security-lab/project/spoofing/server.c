@@ -219,7 +219,20 @@ int send_DHCP_reply_packet(int sock, DHCP_packet *packet, char type) {
         printf("Offering IP: %s\n", inet_ntoa(packet->yiaddr));
     }
     else if (type == DHCP_ACK) {
-        packet->yiaddr = packet->ciaddr;
+        int i = 4;
+        while (i < MAX_OPTIONS_LENGTH && packet->options[i] != 50 && packet->options[i] != '\xFF') {
+            i++;
+            int skip = (int) packet->options[i++];
+            while (skip--) i++;
+        }
+        if (packet->options[i] == '\xFF') return OK;
+
+        packet->yiaddr.s_addr = 0;
+        packet->yiaddr.s_addr |= ((int) packet->options[i + 2] & 0x000000FF);
+        packet->yiaddr.s_addr |= ((int) packet->options[i + 3] & 0x000000FF) << 8;
+        packet->yiaddr.s_addr |= ((int) packet->options[i + 4] & 0x000000FF) << 16;
+        packet->yiaddr.s_addr |= ((int) packet->options[i + 5] & 0x000000FF) << 24;
+
         packet->ciaddr.s_addr = 0;
         packet->giaddr.s_addr = 0;
         packet->siaddr = server_ip;
@@ -299,7 +312,7 @@ int serve_packet(int sock) {
 }
 
 int main() {
-    char interface_name[8] = "lo";
+    char interface_name[8] = "wlp3s0";
 
     srand(time(NULL));
 

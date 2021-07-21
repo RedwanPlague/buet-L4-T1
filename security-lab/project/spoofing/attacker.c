@@ -282,7 +282,7 @@ int get_DHCP_offer_packet(int sock) {
 }
 
 int main() {
-    char interface_name[8] = "enp0s3";
+    char interface_name[8] = "wlp3s0";
 
     srand(time(NULL));
 

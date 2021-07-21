@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/redwan/Documents/L4-T1/all-codes/security-lab/project/spoofing/server.c
+/home/redwan/Documents/L4-T1/all-codes/security-lab/project/spoofing/attacker.c
 arpa/inet.h
 -
 locale.h
@@ -20,8 +20,6 @@ stdio.h
 stdlib.h
 -
 string.h
--
-sys/ioctl.h
 -
 sys/socket.h
 -
