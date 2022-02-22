@@ -41,7 +41,7 @@ struct DHCP_packet {
 typedef struct DHCP_packet DHCP_packet;
 
 #define BOOT_REQUEST 1
-#define BOOT_REPLY 2
+#define BOOT_REPLY   2
 
 #define DHCP_DISCOVER 1
 #define DHCP_REQUEST  3
@@ -63,7 +63,7 @@ typedef struct DHCP_packet DHCP_packet;
 
 #define PACKET_LEN 8192
 
-time_t timeout = 2;
+time_t timeout = 1;
 unsigned char random_mac[MAX_CHADDR_LENGTH];
 u_int32_t transaction_id = 0;
 int DEBUG = 0;
@@ -295,8 +295,8 @@ int send_DHCP_discover_packet(int sock) {
 
     discover_packet.options[i] = '\xFF';
 
-    // spoofed_ip = spoof_random_ip();
-    spoofed_ip = INADDR_ANY;
+    spoofed_ip = spoof_random_ip();
+    // spoofed_ip = INADDR_ANY;
     struct sockaddr_in broadcast_address = get_address(SERVER_PORT, INADDR_BROADCAST);
     while (send_packet(&discover_packet, sizeof(discover_packet), sock, spoofed_ip, &broadcast_address) == FAILURE) {
         printf("Error in sending packet... resending the packet\n");

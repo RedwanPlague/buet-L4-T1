@@ -6,7 +6,7 @@ MAKE = True
 """ Used Constants """
 AES_MODULUS = BitVector(bitstring='100011011')
 TWO = BitVector(intVal=2, size=8)
-KEY_LEN = 256
+KEY_LEN = 128
 BYTES = KEY_LEN // 8
 ROW = 4
 COL = BYTES // ROW
